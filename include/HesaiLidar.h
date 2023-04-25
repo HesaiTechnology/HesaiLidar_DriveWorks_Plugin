@@ -1,10 +1,16 @@
-/**
- * @file
- * <b>HESAI Lidar: 禾赛雷达的基类</b>
- *
- * @b Description: GeneralParser.h中包含了NVIDIA DW中使用到的头文件，
- *                 ByteQueue.hpp文件将其中函数定义为inline才能避免mulit definition的报错
- */
+// Copyright [2022] [Hesai Technology] All rights reserved.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
 
 #ifndef HESAI_LIDAR_H
 #define HESAI_LIDAR_H
@@ -60,31 +66,28 @@ public:
     virtual ~HesaiLidar();
 
     /**
-     * @brief 根据传入的设备类型，创建一个特定的雷达数据解析器
+     * @brief Factory method pattern: create the relevant udp parser object according to the device type.
      * 
-     * @param devicetype 
-     * @return dwStatus 
+     * @param devicetype decide which hesai lidar is used. e.g. 'device=HESAI_AT128' 'device=HESAI_QT128'
      */
     dwStatus createParser(std::string devicetype);
     
     /**
-     * @brief 可通用！ 从传入参数串中获取通讯信息，切记，在虚拟雷达此条不会被调用
-     * 创建一个TCP连接的客户端对象，初始化UDP和GPS的socket端口
+     * @brief To create a TCP client and a UDP client, maybe GPS if it exist, and init their port.
+     * Only for live sensor to configure the TCP&UDP connection. Won't be used by the virtual sensor
      * 
      * @param[in] sal 
-     * @param[in] params 
-     * @return dwStatus 
+     * @param[in] params No used as the params was tranferred in the last function 'createHandle'
      */
     dwStatus createSensor(dwSALHandle_t sal, const char* params);
 
     dwStatus releaseSensor();
 
     /**
-     * @brief 加载角度文件-两种类型的雷达均需要
-     * 虚拟雷达：从本地获取
-     * 实时雷达：从建立的TCP连接socket中通过PTC指令获取
-     * 
-     * @return dwStatus 
+     * @brief Load essential correction file from local folder or live sensor. 
+     * Attention! the point cloud won't be displayed correct if no correction file is found. It will cause point cloud shaking.
+     * Virtual sensor: from a local default folder
+     * Live sensor: from a live sensor by PTC command. Also from a local folder if PTC command failed. PTC is the TCP protocal defined by Hesai
      */
     dwStatus startSensor();
 
@@ -92,57 +95,64 @@ public:
 
     dwStatus resetSensor();
 
+    /**
+     * @brief Get the raw data packet from the live sensor. Virtual sensor is unavailable
+     * 
+     * @param  data return one raw data packet
+     * @param  size return the size of raw data packet
+     * @param  timestamp return current time from the host computer
+     * @param timeout_us return if it failed to obtain correct UDP packet
+    */
     virtual dwStatus readRawData(const uint8_t** data, size_t* size, dwTime_t* timestamp, dwTime_t timeout_us);
 
     /**
-     * @brief 通用
+     * @brief Put the raw data packet to STL container dequeue, thread safe
+     * Packet will be taken out later by API 'readRawData' for parsing
      * 
-     * @param data 
-     * @return dwStatus 
+     * @param data return raw sensor data
      */
     dwStatus returnRawData(const uint8_t* data);
 
     /**
-     * @brief 通用, 将传输层获得的数据缓存取出用于解析
+     * @brief Enqueue one sensor packet to a local packet buffer. For both two sensor type.
      * 
-     * @param data 
-     * @param size 
-     * @param lenPushed 
-     * @return dwStatus 
+     * @param data sensor data to be enqueued to the buffer
+     * @param size size of the sensor data
+     * @param lenPushed return the size of sensor data
      */
     dwStatus pushData(const uint8_t* data, const size_t size, size_t* lenPushed);
 
     /**
-     * @brief 解析流程一样，仅里面用到的Parser不一样
+     * @brief Decode sensor data from local buffer queue with typical hesai parser object
+     * Typical data parser is initialized in function 'createParser'
      * 
-     * @param[out] output 传出点云包，如果格式不合要求出现Loading情况
-     * @param[in] hostTimeStamp 
-     * @return dwStatus 
+     * @param[out] output return decoded packet to platform. 'Loading' Error occurs if the format is incorrect.
+     * @param[in] hostTimeStamp Transfer host timestamp to output packet
      */
     dwStatus parseData(dwLidarDecodedPacket* output, const uint64_t hostTimeStamp);
 
     /**
-     * @brief 解析用户传入字符串，初始化类的公共参数
+     * @brief Deocde essential user params from the terminal, and initialize the auguments of the class
      * 
-     * @param params 用户传入的字符串
-     * @return dwStatus 
+     * @param params user params from the terminal
      */
     dwStatus loadUserParams(const char* params);
     
     /**
-     * @brief 获取一次雷达的校正文件，实时雷达建立TCP连接通过PTC指令获取，虚拟雷达直接从本地当前路径读取
-     * 也使用Parser做了角度文件的解析，应当分开， 各雷达均需要
-     * 命名Calibration更合适
+     * @brief Load correction file.
+     * 
+     * Decode the correction file with typical parser object.
+     * For virtual sensor: from a local file path
+     * For live sensor: through TCP/PTC command
      */
     dwStatus loadLidarCorrection();
-
     dwStatus loadChannelConfig();
     dwStatus loadFiretimes();
 
     /**
-     * @brief 传入雷达的参数，如俯仰角等信息
+     * @brief Get lidar constants
      * 
-     * @param[out] constants 将参数传入
+     * @param[out] constants return lidar constants, e.g. FOV
      * @return dwStatus
      */
     virtual dwStatus getDecoderConstants(_dwSensorLidarDecoder_constants* constants);
@@ -169,42 +179,36 @@ protected:
         return rad * 57.29577951308232087721;
     }
 
-    /**
-     * @brief 从用户输入字符串序列中获取搜寻的参数
-     * 
-     * @param params 用户输入字符串序列
-     * @param search 搜寻的参数
-     * @return std::string 找到的参数
-     */
     std::string getSearchString(std::string params, const std::string search);
 
     void printLidarProperty(dwLidarProperties* property);
 
-    // 参考另三Plugin
+    // Refer to other nvidia plugins, e.g. radar, camera
     dwContextHandle_t m_ctx      = nullptr;
     dwSALHandle_t m_sal          = nullptr;
     dwSensorHandle_t m_lidarSensor = nullptr;
+    // Virtual sensor, namely playing a local bin file
     bool m_virtualSensorFlag;
 
+    // Store UDP data in a local buffer
     dw::plugin::common::ByteQueue m_buffer;
     std::unique_ptr<dw::plugins::common::BufferPool<rawPacket>> m_slot;
     std::unordered_map<uint8_t*, rawPacket*> m_map;
     size_t m_slotSize;
 
-    
-    // PTC获取各种校正文件的TCP
+    // PTC/TCP client to acuqure the correction file
     void *m_pTcpCommandClient;
-    // 获取UDP包
+    // Socket client to acquire the UDP packet
     InputSocket m_inputSocket;
 
     std::string m_ipAddress;
     std::string m_hostIpAddress;
     std::string m_multcastIpAddress;
-    // 禾赛雷达的类型，默认AT128
+    // Type of hesai lidar, default AT128
     std::string m_lidarType = LIDAR_TYPE_AT128;
-    // ！！！ CUSTOM_EX，据说乱传会出错 YES YES YES
+    // Must be CUSTOM_EX demanded by drivework platform
     std::string m_deviceStr = "CUSTOM_EX";
-    // 子类中需要改写这一路径, 此处为一默认值
+    // To be updated by user through terminal input
     std::string m_correctionFilePath = "./correction_at128.dat";
     std::string m_firetimesPath = "./firetimes_qt128.dat";
     std::string m_channelConfigPath = "./channelconfig_qt128.dat";
@@ -212,7 +216,7 @@ protected:
     unsigned short m_udpPort;
     unsigned short m_ptcPort;
 
-    // 基类指针-在子类中初始化为对应的 Udp4_3_Parser
+    // Base class pointer to be initialized as typical parser
     GeneralParser* m_Parser;
     dwLidarPointXYZI m_pointXYZI[21000][256];
     dwLidarPointRTHI m_pointRTHI[21000][256];

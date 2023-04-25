@@ -1,24 +1,3 @@
-/*
- *  Copyright (c) 2020 Hesai Photonics Technology, Lingwen Fang
- *
- *  License: Modified BSD Software License Agreement
- *
- *  $Id$
- */
-
-/** \file
- *
- *  Input classes for the Pandar128 3D LIDAR:
- *
- *     Input -- base class used to access the data independently of
- *              its source
- *
- *     InputSocket -- derived class reads live data from the device
- *              via a UDP socket
- *
- *     InputPCAP -- derived class provides a similar interface from a
- *              PCAP dump
- */
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -29,6 +8,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <sstream>
+
 #include "InputSocket.h"
 #include "platUtil.h"
 
@@ -50,7 +30,6 @@ void InputSocket::init(std::string deviceipaddr, std::string hostIpAddr, std::st
 	m_iSockGpsfd = -1;
 	m_u32Sequencenum = 0;
 
-	// connect to Pandar UDP port
 	// printf("InputSocket: init, UDP port=%d, multcastIp=%s, gpsport=%d\n", lidarport, multcastIpAddr.c_str(), gpsport);
 	m_iSockfd = socket(PF_INET, SOCK_DGRAM, 0);
 	if(m_iSockfd == -1) {
@@ -98,7 +77,7 @@ void InputSocket::init(std::string deviceipaddr, std::string hostIpAddr, std::st
 		memset(&myAddressGPS, 0, sizeof(myAddressGPS));  // initialize to zeros
 		myAddressGPS.sin_family = AF_INET;               // host byte order
 		myAddressGPS.sin_port = htons(gpsport);          // port in network byte order
-		myAddressGPS.sin_addr.s_addr = INADDR_ANY;  // automatically fill in my IP
+		myAddressGPS.sin_addr.s_addr = INADDR_ANY;  	 // automatically fill in my IP
 
 		if (bind(m_iSockGpsfd, reinterpret_cast<sockaddr *>(&myAddressGPS), sizeof(sockaddr)) == -1) {
 			perror("bind");  // TODO: perror errno
@@ -130,23 +109,11 @@ void InputSocket::init(std::string deviceipaddr, std::string hostIpAddr, std::st
   	}
 }
 
-/**
- * @brief 关闭GPS和点云UDP接受的两个socket
- * 
- */
 void InputSocket::close_socket() { 
 	if(m_iSockGpsfd >0) close(m_iSockGpsfd);
 	if(m_iSockfd >0) close(m_iSockfd); 
 }
 
-/**
- * @brief 从开启的点云socket中获取单个UDP包
- * 
- * @param[out] pkt 字节流的UDP包
- * @param[in] timeout poll获取一次文件描述符中读到的UDP包
- * @return PacketType 返回包的类型，根据包的size判断
- * GPS_PACKET FAULT_MESSAGE_PACKET LOG_REPORT_PACKET POINTCLOUD_PACKET
- */
 PacketType InputSocket::getPacket(UdpPacket *&pkt, int timeout) {
 	// printf("InputSocket: getPacket, starting\n");
 	timespec time;
@@ -199,13 +166,6 @@ PacketType InputSocket::getPacket(UdpPacket *&pkt, int timeout) {
 	if (nbytes == LOG_REPORT_PCAKET_SIZE) {
 		return LOG_REPORT_PACKET;
 	}
-	// if(!m_bGetUdpVersion) {
-	// 	return POINTCLOUD_PACKET;
-	// }
-	// else if(!checkPacketSize(pkt)){
-	// 	return ERROR_PACKET;  // Packet size not match
-	// }
-	// calcPacketLoss(pkt);
+
 	return POINTCLOUD_PACKET;
 }
-

@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-//AT128和QT128均是发这个指令， PTC_COMMAND_GET_LIDAR_CALIBRATION=5
+// To acquire the calibration file, command 5 is the same for AT128 and QT128
 typedef enum {
   PTC_COMMAND_GET_CALIBRATION = 0,
   PTC_COMMAND_SET_CALIBRATION,
@@ -70,11 +70,11 @@ typedef struct TC_Command_s {
 } TC_Command;
 
 /**
- * @brief 创建一个TCP连接
+ * @brief Create a new Tcp client
  * 
- * @param ip 地址
- * @param port 端口
- * @return void* 创建的TCP客户端对象指针
+ * @param ip lidar tcp ip address
+ * @param port lidar tcp port
+ * @return TCP client pointer
  */
 void* TcpCommandClientNew(const char* ip, const unsigned short port);
 void BuildCmd(TC_Command command, PTC_COMMAND cmd, unsigned char* data);
@@ -83,12 +83,12 @@ PTC_ErrCode TcpCommandSetCalibration(const void* handle, const unsigned char* bu
 PTC_ErrCode TcpCommandGetCalibration(const void* handle, char** buffer,
                                      unsigned int* len);
 /**
- * @brief 从TCP连接的socket中取得校正文件的字节流, 只需要获取一次即可！
+ * @brief Get correction file from tcp socket
  * 
- * @param handle TcpCommandClient，结构体，保存文件描述符和线程标识
- * @param[out] buffer 读到的校正文件字节流
- * @param[out] len 校正文件字节流长度
- * @return PTC_ErrCode =0 为正常
+ * @param handle Tcp client, namely TcpCommandClient
+ * @param[out] buffer return the byte buffer of correction file
+ * @param[out] len return the length of buffer
+ * @return 0: succuss
  */
 PTC_ErrCode TcpCommandGetLidarCalibration(const void* handle, unsigned char** buffer,
                                           unsigned int* len);

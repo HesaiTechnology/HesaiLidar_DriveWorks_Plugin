@@ -28,7 +28,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
- * @b Changes 相较原文件将所有的函数改为inline，因为hpp文件会出现multi definition问题
+ * @b Changes Add inline definition to avoid Error 'multi definition' comparing to the original NVIDIA file.
+ * This is caused by the defintion of hpp file, which combines .cpp and .h
  */
 #ifndef SAMPLES_PLUGINS_BYTEQUEUE_HPP
 #define SAMPLES_PLUGINS_BYTEQUEUE_HPP

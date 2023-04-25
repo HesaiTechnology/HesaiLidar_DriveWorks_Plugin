@@ -224,7 +224,7 @@ dwStatus Udp4_3_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
         (const unsigned char *)pAzimuth + sizeof(HS_LIDAR_BODY_AZIMUTH_ST_V3));
 
     int Azimuth = u16Azimuth * FINE_AZIMUTH_UNIT + u8FineAzimuth;
-    int count = 0, field = 0;
+    int count = 0;
     if ( m_bGetCorrectionFile) {
       while (count < m_PandarAT_corrections.header.frame_number &&
              (((Azimuth + MAX_AZI_LEN - m_PandarAT_corrections.l.start_frame[field]) % MAX_AZI_LEN +
@@ -269,7 +269,7 @@ dwStatus Udp4_3_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
       index++;
       // PrintDwPoint(&pointXYZI[index]);
     }
-    if (IsNeedFrameSplit(u16Azimuth, field)) {
+    if (IsNeedFrameSplit(u16Azimuth)) {
       // 未置true会一直显示loading，几秒后超时退出崩溃
       output->scanComplete = true;
     }

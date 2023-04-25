@@ -43,7 +43,7 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
   // pTail->Print();
   m_u16SpinSpeed = pTail->m_u16MotorSpeed;
   // 该参数，双回波QT128不存在？
-  m_bIsDualReturn = false; //////!!!
+  m_bIsDualReturn = false;
   // 从包头或者包尾获取
   output->duration = pTail->GetTimestamp() - 100000;
   // 时间戳在调完此函数后外部输入
@@ -128,7 +128,7 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
       // PrintDwPoint(&pointXYZI[index]);
     } // 内循环
     
-    if (IsNeedFrameSplit(azimuth, 0)) {
+    if (IsNeedFrameSplit(azimuth)) {
       output->scanComplete = true;
     }
     m_u16LastAzimuth = azimuth;
@@ -147,103 +147,41 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
 }
 
 dwStatus Udp3_2_Parser::getDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
-    // printf("getDecoderConstants: \n");
-    // QT的一个包里1127个byte, 按1500, 雷达是单回波还是双回波，频率10Hz已确定 15000 150000 15000
-    constants->maxPayloadSize = 1500;
-    // 每秒包数量，360/0.4*10 = 9000，如果是双回波的多出一倍*2  18000 36000 
-    // 发生std::bad_alloc 900000 450000 90000不行了， 原因怀疑是内存分配不够？
-    constants->properties.packetsPerSecond = 9000;
-    // 每秒点数量，9000 * 128 * 2 = 2304000, 该参数直接影响实时点云显示！
-    constants->properties.pointsPerSecond = 2304000;
-    // 10Hz 每秒转10圈
-    constants->properties.spinFrequency = 10;
+  // printf("getDecoderConstants: \n");
+  // QT的一个包里1127个byte, 按1500, 雷达是单回波还是双回波，频率10Hz已确定 15000 150000 15000
+  constants->maxPayloadSize = 1500;
+  // 每秒包数量，360/0.4*10 = 9000，如果是双回波的多出一倍*2  18000 36000 
+  // 发生std::bad_alloc 900000 450000 90000不行了， 原因怀疑是内存分配不够？
+  constants->properties.packetsPerSecond = 9000;
+  // 每秒点数量，9000 * 128 * 2 = 2304000, 该参数直接影响实时点云显示！
+  constants->properties.pointsPerSecond = 2304000;
+  // 10Hz 每秒转10圈
+  constants->properties.spinFrequency = 10;
 
-    constants->properties.packetsPerSpin = 900;
-    constants->properties.pointsPerPacket = 256;
-    
-    constants->properties.pointsPerSpin = 230400;
-    constants->properties.pointStride = 8;
-    // 支持关调一些激光器，动态检查FOV， 如果用户关了一些FOV
-    constants->properties.horizontalFOVStart = deg2Rad(0);
-    constants->properties.horizontalFOVEnd = deg2Rad(360);
-    // QT有可能40 128 64， 从UDP包获得，以为128线，仅40， 参数传入尽量对
-    constants->properties.numberOfRows = 128;
-    // 说明书上-52.6，实际校正文件中的有差别， 角度文件第一个，和最后一个
-    constants->properties.verticalFOVStart = deg2Rad(-52.6);
-    constants->properties.verticalFOVEnd = deg2Rad(52.6);
-    // 我们的只有128线，256这个数组大小
-    for (int i = 0; i < 128; i++) {
-        if(m_bGetCorrectionFile == true && m_vEleCorrection.empty() == false) {
-            constants->properties.verticalAngles[i] = deg2Rad(m_vEleCorrection[i] / HS_LIDAR_QT128_AZIMUTH_UNIT);
-            // printf("verticalAngles: %f \n", constants->properties.verticalAngles[i]);
-        }
-    }
-
-    // printLidarProperty(&constants->properties);
-    return DW_SUCCESS;
-}
-
-
-int Udp3_2_Parser::ParseCorrectionString(char* correction_content) {
-  // printf("ParseCorrectionString: parsing calibration content\n");
-  // printf("%s \n", correction_content);
-  std::string correction_content_str = correction_content;
-	std::istringstream ifs(correction_content_str);
-	std::string line;
-
-	// skip first line "Laser id,Elevation,Azimuth" or "eeff"
-  std::getline(ifs, line);
-
-	float elevationList[MAX_LASER_NUM], azimuthList[MAX_LASER_NUM];
-	std::vector<std::string>  vfirstLine;
-  HSSplit(vfirstLine, line, ',');
-	// HSSplit(vfirstLine, line, ',');
-	if(vfirstLine[0] == "EEFF" || vfirstLine[0] == "eeff"){
-		// skip second line
-    std::getline(ifs, line);
-	}
-    
-  int lineCount = 0;
-  while (std::getline(ifs, line)) {
-      std::vector<std::string>  vLineSplit;
-      HSSplit(vLineSplit, line, ',');
-      if (vLineSplit.size() < 3) { // skip error line or hash value line 
-          continue;
-      } else {
-          lineCount++;
+  constants->properties.packetsPerSpin = 900;
+  constants->properties.pointsPerPacket = 256;
+  
+  constants->properties.pointsPerSpin = 230400;
+  constants->properties.pointStride = 8;
+  // 支持关调一些激光器，动态检查FOV， 如果用户关了一些FOV
+  constants->properties.horizontalFOVStart = deg2Rad(0);
+  constants->properties.horizontalFOVEnd = deg2Rad(360);
+  // QT有可能40 128 64， 从UDP包获得，以为128线，仅40， 参数传入尽量对
+  constants->properties.numberOfRows = 128;
+  // 说明书上-52.6，实际校正文件中的有差别， 角度文件第一个，和最后一个
+  constants->properties.verticalFOVStart = deg2Rad(-52.6);
+  constants->properties.verticalFOVEnd = deg2Rad(52.6);
+  // 我们的只有128线，256这个数组大小
+  for (int i = 0; i < 128; i++) {
+      if(m_bGetCorrectionFile == true && m_vEleCorrection.empty() == false) {
+          constants->properties.verticalAngles[i] = deg2Rad(m_vEleCorrection[i] / HS_LIDAR_QT128_AZIMUTH_UNIT);
+          // printf("verticalAngles: %f \n", constants->properties.verticalAngles[i]);
       }
-      float elevation, azimuth;
-      int laserId = 0;
-
-      std::stringstream ss(line);
-      std::string subline;
-      std::getline(ss, subline, ',');
-      std::stringstream(subline) >> laserId;
-      std::getline(ss, subline, ',');
-      std::stringstream(subline) >> elevation;
-      std::getline(ss, subline, ',');
-      std::stringstream(subline) >> azimuth;
-
-      if (laserId != lineCount || laserId >= MAX_LASER_NUM) {
-          printf("ParseCorrectionString: laser id Error. laser Id=%d, line=%d", laserId, lineCount);
-          return -1;
-      }
-      elevationList[laserId - 1] = elevation;
-      azimuthList[laserId - 1] = azimuth;
   }
-  m_vEleCorrection.resize(lineCount);
-  m_vAziCorrection.resize(lineCount);
 
-	for (int i = 0; i < lineCount; ++i) {
-		m_vEleCorrection[i] = static_cast<int32_t> (round(elevationList[i] * 1000));
-		m_vAziCorrection[i] = static_cast<int32_t> (round(azimuthList[i] * 1000));
-    // printf("m_vEleCorrection, %d \n", m_vEleCorrection[i]);
-	}
-
-  m_bGetCorrectionFile = true;
-	return 0;
+  // printLidarProperty(&constants->properties);
+  return DW_SUCCESS;
 }
-
 
 int16_t Udp3_2_Parser::GetVecticalAngle(int channel) {
   if (channel < 0 || channel >= HS_LIDAR_QT128_LASER_NUM) {

@@ -22,6 +22,7 @@ set(SOURCES
     ./src/tcp_command_client.c
     ./src/util.c
     ./src/PlatUtils.cpp
+    ./UdpParser/src/Udp1_4_Parser.cpp
     ./UdpParser/src/Udp4_3_Parser.cpp
     ./UdpParser/src/Udp3_2_Parser.cpp
     ./UdpParser/src/GeneralParser.cpp

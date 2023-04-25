@@ -6,13 +6,9 @@
 using std::cout;
 using std::endl;
 
-// 这里面include的，添加了一个<BufferPool.hpp> <ByteQueue.hpp>
-// 他们的hpp是聚集了.h和.cpp的，因此
-
-// 该数组为static类型，类内存在，不过是一个存的数组，取了这么长一个名字？
+// To store several lidar objects
 std::vector<std::unique_ptr<dw::plugins::lidar::HesaiLidar>> dw::plugins::lidar::HesaiLidar::g_sensorContext;
 
-//#######################################################################################
 static bool checkValid(dw::plugins::lidar::HesaiLidar* sensor)
 {
     for (auto& i : dw::plugins::lidar::HesaiLidar::g_sensorContext)
@@ -23,12 +19,11 @@ static bool checkValid(dw::plugins::lidar::HesaiLidar* sensor)
     return false;
 }
 
-// exported functions
 extern "C" {
 
-//#######################################################################################
-// 该函数后即可进行数据decode, 将new创建的HesaiLidar对象的指针传给dwSensorPluginSensorHandle_t
-// 内部维护dwSensorPluginSensorHandle_t，所有的操作均是对这个指针对象sensor
+// Drivework platform itself manages the customized sensor object 'sensor', the object won't be delete unless the platform software exit
+// Transfer the pointer of your customized sensor object 'HesaiLidar' to the drivework platform pointer 'sensor'
+// Params from user terminal is loaded after the initialization
 dwStatus _dwSensorPlugin_createHandle(dwSensorPluginSensorHandle_t* sensor, dwSensorPluginProperties* /*properties*/,
                                       const char* params, dwContextHandle_t ctx)
 {
@@ -39,9 +34,7 @@ dwStatus _dwSensorPlugin_createHandle(dwSensorPluginSensorHandle_t* sensor, dwSe
     }
 
     size_t slotSize = 10; // Size of memory pool to read raw data from the sensor
-    // 根据获取到的device=HESAI_AT128还是HESAI_AT128 new出对应的
     std::unique_ptr<dw::plugins::lidar::HesaiLidar> sensorContext(new dw::plugins::lidar::HesaiLidar(ctx, DW_NULL_HANDLE, slotSize));
-    // (void) params;
     sensorContext->loadUserParams(params);
 
     std::string lidartype = sensorContext->getLidarType();
@@ -56,24 +49,6 @@ dwStatus _dwSensorPlugin_createHandle(dwSensorPluginSensorHandle_t* sensor, dwSe
     return DW_SUCCESS;
 }
 
-//#######################################################################################
-// 如果是虚拟雷达，不会调用此函数，因此不能获得decode_path=等一系列输入
-// 雷达的通讯与信号传输，reinterpret_cast又将Handle转回HesaiLidar对象！
-// 仅用于实时雷达，虚拟雷达不调用，用户的输入params根本没机会获取，只执行一次
-dwStatus _dwSensorPlugin_createSensor(const char* params, dwSALHandle_t sal, dwSensorPluginSensorHandle_t sensor)
-{
-    // std::cout << "_dwSensorPlugin_createSensor: " << std::endl;
-
-    auto sensorContext = reinterpret_cast<dw::plugins::lidar::HesaiLidar*>(sensor);
-    if (!checkValid(sensorContext))
-    {
-        return DW_INVALID_HANDLE;
-    }
-
-    return sensorContext->createSensor(sal, params);
-}
-
-//#######################################################################################
 dwStatus _dwSensorPlugin_start(dwSensorPluginSensorHandle_t sensor)
 {
     // std::cout << "_dwSensorPlugin_start: " << std::endl;
@@ -86,7 +61,6 @@ dwStatus _dwSensorPlugin_start(dwSensorPluginSensorHandle_t sensor)
     return sensorContext->startSensor();
 }
 
-//#######################################################################################
 dwStatus _dwSensorPlugin_release(dwSensorPluginSensorHandle_t sensor)
 {
     // std::cout << "_dwSensorPlugin_release: " << std::endl;
@@ -112,7 +86,6 @@ dwStatus _dwSensorPlugin_release(dwSensorPluginSensorHandle_t sensor)
     return DW_FAILURE;
 }
 
-//#######################################################################################
 dwStatus _dwSensorPlugin_stop(dwSensorPluginSensorHandle_t sensor)
 {
     // std::cout << "_dwSensorPlugin_stop: " << std::endl;
@@ -125,7 +98,6 @@ dwStatus _dwSensorPlugin_stop(dwSensorPluginSensorHandle_t sensor)
     return sensorContext->stopSensor();
 }
 
-//#######################################################################################
 dwStatus _dwSensorPlugin_reset(dwSensorPluginSensorHandle_t sensor)
 {
     // std::cout << "_dwSensorPlugin_reset: " << std::endl;
@@ -138,9 +110,25 @@ dwStatus _dwSensorPlugin_reset(dwSensorPluginSensorHandle_t sensor)
     return sensorContext->resetSensor();
 }
 
-//#######################################################################################
+////////////////////////////////Only for live sensor////////////////////////////////
+
+// Attention! The virtual lidar will not call this API, so params can not be load here
+// To build the TCP and UDP communication for the live sensor
+dwStatus _dwSensorPlugin_createSensor(const char* params, dwSALHandle_t sal, dwSensorPluginSensorHandle_t sensor)
+{
+    // std::cout << "_dwSensorPlugin_createSensor: " << std::endl;
+
+    auto sensorContext = reinterpret_cast<dw::plugins::lidar::HesaiLidar*>(sensor);
+    if (!checkValid(sensorContext))
+    {
+        return DW_INVALID_HANDLE;
+    }
+
+    return sensorContext->createSensor(sal, params);
+}
+
 // There may be multiple calls to dwSensorPlugin_readRawData() before a call to dwSensorPlugin_returnRawData(). 
-// 虚拟雷达点云播放不调用此接口-反复执行 _dwSensorPlugin_readRawData _dwSensorPlugin_returnRawData
+// Won't be called by the virtual sensor playing the recorded bin file
 dwStatus _dwSensorPlugin_readRawData(const uint8_t** data, size_t* size, dwTime_t* timestamp,
                                      dwTime_t timeout_us, dwSensorPluginSensorHandle_t sensor)
 {
@@ -154,7 +142,8 @@ dwStatus _dwSensorPlugin_readRawData(const uint8_t** data, size_t* size, dwTime_
     return sensorContext->readRawData(data, size, timestamp, timeout_us);
 }
 
-//#######################################################################################
+
+// Won't be called by the virtual sensor when playing the recorded bin file
 dwStatus _dwSensorPlugin_returnRawData(const uint8_t* data, dwSensorPluginSensorHandle_t sensor)
 {
     // std::cout << "_dwSensorPlugin_returnRawData: " << std::endl;
@@ -167,9 +156,11 @@ dwStatus _dwSensorPlugin_returnRawData(const uint8_t* data, dwSensorPluginSensor
     return sensorContext->returnRawData(data);
 }
 
-//#######################################################################################
-// 前几个函数已经获得的点云包，bin文件中的也是，此处解析
-// 虚拟雷达也调用-反复执行， 如下三个函数是将UDP包解析到NVIDIA要求的格式
+////////////////////////////////For virtual and live sensor////////////////////////////////
+
+// Enqueue byte data in global buffer for next parsing. Also for virtual sensor
+// For live sensor, the byte data is acquired by the three API above-mentioned
+// For virtual sensor, the drivework platform is in charge
 dwStatus _dwSensorPlugin_pushData(size_t* lenPushed, const uint8_t* data, const size_t size, dwSensorPluginSensorHandle_t sensor)
 {
     // std::cout << "_dwSensorPlugin_pushData: " << std::endl;
@@ -182,12 +173,12 @@ dwStatus _dwSensorPlugin_pushData(size_t* lenPushed, const uint8_t* data, const 
     return sensorContext->pushData(data, size, lenPushed);
 }
 
-//#######################################################################################
-// 虚拟雷达也调用
+// To parse the UDP packet both for virtual and live sensor
+// Return nvidia-format point cloud data through pointer 'output'
 dwStatus _dwSensorLidarPlugin_parseDataBuffer(dwLidarDecodedPacket* output, const long int hostTimeStamp,
                                                         dwSensorPluginSensorHandle_t sensor)
 {
-    // std::cout << "_dwSensorLidarPlugin_parseDataBuffer时间戳：" << hostTimeStamp << std::endl;
+    // std::cout << "_dwSensorLidarPlugin_parseDataBuffer：" << "hostTimeStamp=" << hostTimeStamp << std::endl;
     auto sensorContext = reinterpret_cast<dw::plugins::lidar::HesaiLidar*>(sensor);
     if (!checkValid(sensorContext))
     {
@@ -197,9 +188,8 @@ dwStatus _dwSensorLidarPlugin_parseDataBuffer(dwLidarDecodedPacket* output, cons
     return ret;
 }
 
-//######################################################################################
-// 虚拟雷达也调用,此时每次都会调用，？？为何每次解析都会调用？可能防止常数发生变化也能更新？
-// 心跳，每秒会调用几次
+// Heatbeat, To be called several times per second. Guess it checks the changes of lidar configuration
+// Return lidar constants, also called by the virtual sensor
 dwStatus _dwSensorLidarPlugin_getDecoderConstants(_dwSensorLidarDecoder_constants* constants, dwSensorPluginSensorHandle_t sensor) 
 {
     // std::cout << "_dwSensorLidarPlugin_getDecoderConstants" << std::endl;
@@ -213,7 +203,7 @@ dwStatus _dwSensorLidarPlugin_getDecoderConstants(_dwSensorLidarDecoder_constant
     return ret;
 }
 
-//######################################################################################
+// Transfer the function pointers we defined to an overall object created by nvidia drivework
 dwStatus dwSensorLidarPlugin_getFunctionTable(dwSensorLidarPluginFunctionTable* functions)
 {
     // std::cout << "dwSensorLidarPlugin_getFunctionTable: " << std::endl;

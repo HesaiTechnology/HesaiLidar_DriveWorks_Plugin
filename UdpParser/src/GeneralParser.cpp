@@ -1,12 +1,6 @@
 #include "GeneralParser.h"
 
-const double GeneralParser::kLightCoefficient = 0.1498527;
-const double GeneralParser::kConvertWidthUnit = 0.1498527 / 256;
 const std::string GeneralParser::kLidarIPAddr("192.168.1.201");
-const double GeneralParser::kDualWidthUnit = 0.03125;        // 1/32ns
-const double GeneralParser::kDistUnitWidthWithDiff = 0.008;  // 8mm
-const double GeneralParser::kWidthUnitWithDiff = 0.0625;     // 1/16ns
-int GeneralParser::maxAzimuthLen = 36000;                    // 360°*100
 
 GeneralParser::GeneralParser() {
   m_iMotorSpeed = 0;
@@ -16,17 +10,13 @@ GeneralParser::GeneralParser() {
   m_u16FrameStartAzimuth = kFrameStartAzimuth;
   m_u16FrameEndAzimuth = kFrameEndAzimuth;
   m_u16LastAzimuth = 0;
-  m_vFrames.clear();
-  m_vFrames.reserve(m_u16FramesSize);
-  m_currentFrame.clear();
-  m_currentFrame.reserve(kPackageNumMax);
   m_iMaxPackageNum = kPackageNumMax;
+  // TODO 总感觉这里有问题
   for(int i = 0; i < CIRCLE; ++i) {
       m_fSinAllAngle[i] = std::sin(i * 2 * M_PI / CIRCLE);
       m_fCosAllAngle[i] = std::cos(i * 2 * M_PI / CIRCLE);
   }
 }
-
 
 GeneralParser::~GeneralParser() {
   // printf("release general Parser\n");
@@ -39,7 +29,6 @@ int GeneralParser::LoadCorrectionFile(std::string correction_path) {
     printf("Open correction file Error, path=%s\n", correction_path.c_str());
     return -1;
   }
-
   int length = 0;
   fin.seekg(0, std::ios::end);
   length = fin.tellg();
@@ -48,7 +37,6 @@ int GeneralParser::LoadCorrectionFile(std::string correction_path) {
   fin.read(buffer, length);
   fin.close();
 
-  // 该函数必须在子类中重写，基类中仅定义了模板函数
   int ret = ParseCorrectionString(buffer);
   delete[] buffer;
   if (ret != 0) {
@@ -56,6 +44,66 @@ int GeneralParser::LoadCorrectionFile(std::string correction_path) {
   } 
 
   return ret;
+}
+
+int GeneralParser::ParseCorrectionString(char* correction_content) {
+  // printf("ParseCorrectionString: parsing calibration content\n");
+  // printf("%s \n", correction_content);
+  std::string correction_content_str = correction_content;
+	std::istringstream ifs(correction_content_str);
+	std::string line;
+
+	// skip first line "Laser id,Elevation,Azimuth" or "eeff"
+  std::getline(ifs, line);
+
+	float elevationList[MAX_LASER_NUM], azimuthList[MAX_LASER_NUM];
+	std::vector<std::string>  vfirstLine;
+  HSSplit(vfirstLine, line, ',');
+	// HSSplit(vfirstLine, line, ',');
+	if(vfirstLine[0] == "EEFF" || vfirstLine[0] == "eeff"){
+		// skip second line
+    std::getline(ifs, line);
+	}
+    
+  int lineCount = 0;
+  while (std::getline(ifs, line)) {
+    std::vector<std::string>  vLineSplit;
+    HSSplit(vLineSplit, line, ',');
+    if (vLineSplit.size() < 3) { // skip error line or hash value line 
+        continue;
+    } else {
+        lineCount++;
+    }
+    float elevation, azimuth;
+    int laserId = 0;
+
+    std::stringstream ss(line);
+    std::string subline;
+    std::getline(ss, subline, ',');
+    std::stringstream(subline) >> laserId;
+    std::getline(ss, subline, ',');
+    std::stringstream(subline) >> elevation;
+    std::getline(ss, subline, ',');
+    std::stringstream(subline) >> azimuth;
+
+    if (laserId != lineCount || laserId >= MAX_LASER_NUM) {
+        printf("ParseCorrectionString: laser id Error. laser Id=%d, line=%d", laserId, lineCount);
+        return -1;
+    }
+    elevationList[laserId - 1] = elevation;
+    azimuthList[laserId - 1] = azimuth;
+  }
+  m_vEleCorrection.resize(lineCount);
+  m_vAziCorrection.resize(lineCount);
+
+	for (int i = 0; i < lineCount; ++i) {
+		m_vEleCorrection[i] = static_cast<int32_t> (round(elevationList[i] * 1000));
+		m_vAziCorrection[i] = static_cast<int32_t> (round(azimuthList[i] * 1000));
+    // printf("m_vEleCorrection, %d \n", m_vEleCorrection[i]);
+	}
+
+  m_bGetCorrectionFile = true;
+	return 0;
 }
 
 int GeneralParser::LoadFiretimesString(const char *firetimes) {
@@ -86,18 +134,19 @@ void GeneralParser::LoadChannelConfigFile(std::string channel_config_path) {
   return;
 }
 
-void GeneralParser::SetEnableFireTimeCorrection(bool enable){
+void GeneralParser::SetEnableFireTimeCorrection(bool enable) {
     m_bEnableFireTimeCorrection = enable;
 }
 
-void GeneralParser::SetEnableDistanceCorrection(bool enable){
+void GeneralParser::SetEnableDistanceCorrection(bool enable) {
     m_bEnableDistanceCorrection = enable;
 }
 
-bool GeneralParser::IsNeedFrameSplit(uint16_t azimuth, int field) {
-  // field = field <= 0 ? m_PandarAT_corrections.header.frame_number - 1 : field - 1;
-  // int start_frame = m_PandarAT_corrections.l.start_frame[field] / 256.0f;
-  (void) field;
+int16_t GeneralParser::GetVecticalAngle(int channel) {
+  return m_vEleCorrection[channel];
+}
+
+bool GeneralParser::IsNeedFrameSplit(uint16_t azimuth) {
   if (abs(azimuth - m_u16LastAzimuth) > kAzimuthTolerance &&
         m_u16LastAzimuth != 0 ) {
       return true;

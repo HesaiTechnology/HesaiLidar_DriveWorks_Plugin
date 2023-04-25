@@ -50,7 +50,7 @@ class Udp3_2_Parser : public GeneralParser {
    * @param correction_content 读到的字节流
    * @return int 0为正常，其他数字错误
    */
-  virtual int ParseCorrectionString(char *correction_content) override;
+  // virtual int ParseCorrectionString(char *correction_content) override;
   
   /**
    * @brief 解析获得单个包

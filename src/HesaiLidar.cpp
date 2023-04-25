@@ -4,6 +4,7 @@
 #include "HesaiLidar.h"
 #include "Udp4_3_Parser.h"
 #include "Udp3_2_Parser.h"
+#include "Udp1_4_Parser.h"
 
 namespace dw
 {
@@ -11,8 +12,6 @@ namespace plugins
 {
 namespace lidar
 {
-
-
 
 HesaiLidar::~HesaiLidar() {
     if (m_Parser != nullptr) {
@@ -27,6 +26,8 @@ dwStatus HesaiLidar::createParser(std::string lidartype) {
         m_Parser = new Udp4_3_Parser();
     } else if (lidartype == LIDAR_TYPE_QT128) {
         m_Parser = new Udp3_2_Parser();
+    } else if (lidartype == LIDAR_TYPE_QT128) {
+        m_Parser = new Udp1_4_Parser();
     } else {
         std::cout << "createParser, create specific parser Error, lidartype=" << lidartype << std::endl;
         return DW_CANNOT_CREATE_OBJECT;
@@ -39,10 +40,7 @@ dwStatus HesaiLidar::createSensor(dwSALHandle_t sal, const char* params)
 {
     m_sal               = sal;
     m_virtualSensorFlag = false;
-    // 用户传入的参数，在createHandle中已经处理
     (void) params;
-
-    // 创建TCP的连接，获取只传一次的角度文件,仅实时雷达需要
     m_pTcpCommandClient = TcpCommandClientNew(m_ipAddress.c_str(), m_ptcPort);  
              
     return DW_SUCCESS;
@@ -64,14 +62,12 @@ dwStatus HesaiLidar::startSensor()
     }
     
     if (loadLidarCorrection() != DW_SUCCESS) {
-        // 如果是返回失败, 从本地再获取一次
         std::cout << "startSensor: first loading calibration Error, try local file" << std::endl;
         if (m_Parser->LoadCorrectionFile(m_correctionFilePath) != 0) {
             return DW_FAILURE;
         }
     }
 
-    // QT128需要处理，AT不必，firetime和channelconfig
     if (m_lidarType == LIDAR_TYPE_QT128) {
         if(loadChannelConfig() != DW_SUCCESS) {
             std::cout << "startSensor: QT128 loadChannelConfig Error" << std::endl;
@@ -171,7 +167,7 @@ dwStatus HesaiLidar::pushData(const uint8_t* data, const size_t size, size_t* le
 dwStatus HesaiLidar::parseData(dwLidarDecodedPacket* output, const uint64_t hostTimeStamp)
 {
     const UdpPacket* msg;
-    //从缓存队列中获得一个第一个包进行解析
+    // Peek the first packet from the buffer queue
     if (!m_buffer.peek(reinterpret_cast<const uint8_t**>(&msg)))
     {
         return DW_FAILURE;
@@ -181,8 +177,6 @@ dwStatus HesaiLidar::parseData(dwLidarDecodedPacket* output, const uint64_t host
     {
         return DW_INVALID_HANDLE;
     }
-    //不成功还要一直加载干吗？
-    // if(m_Parser->m_bGetCorrectionFile == false) loadLidarCorrection();
     count++;
     m_Parser->ParserOnePacket(output,msg->m_u8Buf,msg->m_i16Len ,m_pointXYZI[count], m_pointRTHI[count]);
     dwContext_getCurrentTime(&output->hostTimestamp, m_ctx);
@@ -198,11 +192,9 @@ dwStatus HesaiLidar::loadLidarCorrection()
 {
     // std::cout << "HesaiLidar::loadLidarCorrection" << std::endl;
     if (isVirtualSensor()) {
-        // 虚拟雷达，即录制点云播放, 文件从本地获取
         int ret = m_Parser->LoadCorrectionFile(m_correctionFilePath);
         return ret == 0 ? DW_SUCCESS : DW_SAL_CANNOT_INITIALIZE;
     } else {
-        // 实时连接的雷达
         if(m_pTcpCommandClient == NULL) {
             printf("loadLidarCorrection: m_pTcpCommandClient is Null\n");
             return DW_CANNOT_CREATE_OBJECT;
@@ -230,7 +222,6 @@ dwStatus HesaiLidar::loadChannelConfig() {
     if (isVirtualSensor() == true) {
         m_Parser->LoadChannelConfigFile(m_channelConfigPath);
     } else {
-        // 解析ChannelConfig
         unsigned char* buffer = NULL;
         unsigned int len = 0;
         PTC_ErrCode status = TcpCommandGet(m_pTcpCommandClient, PTC_COMMAND_GET_LIDAR_CHANNEL_CONFIG, &buffer, &len);
@@ -243,7 +234,6 @@ dwStatus HesaiLidar::loadChannelConfig() {
                 return DW_CANNOT_CREATE_OBJECT;
             }
         }
-
     }
 
     return DW_SUCCESS;
@@ -253,7 +243,6 @@ dwStatus HesaiLidar::loadFiretimes() {
     if (isVirtualSensor() == true) {
         m_Parser->LoadFiretimesFile(m_firetimesPath);
     } else {
-        // 解析Firetimes, 网页上工厂设置处upload如果显示红色则雷达内已烧录，可能未烧录. 无firetime的也能正常显示
         unsigned char* buffer = NULL;
         unsigned int len = 0;
         PTC_ErrCode status = TcpCommandGet(m_pTcpCommandClient, PTC_COMMAND_GET_LIDAR_FIRETIMES, &buffer, &len);
@@ -272,7 +261,7 @@ dwStatus HesaiLidar::loadFiretimes() {
 }
 
 dwStatus HesaiLidar::getDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
-    // ！必须指定 deviceString是CUSTOM_EX，不然一直黑屏崩溃
+    // ! Must assign deviceString to be CUSTOM_EX, or A black screen Error might occur
     memcpy(&constants->properties.deviceString, m_deviceStr.c_str(), 256);
     m_Parser->getDecoderConstants(constants);
 
@@ -283,7 +272,7 @@ std::string HesaiLidar::getLidarType() {
     return m_lidarType;
 }
 
-//########################################privete###############################################
+////////////////////////////////////////privete////////////////////////////////////////
 
 void HesaiLidar::resetSlot()
 {
@@ -320,7 +309,6 @@ void HesaiLidar::resetSlot()
 }
 
 std::string HesaiLidar::getSearchString(std::string params, const std::string search) {
-    // 考虑到params会对自身substr
     std::string result = "";
     size_t pos = params.find(search);
     if (pos == std::string::npos)
@@ -336,20 +324,17 @@ std::string HesaiLidar::getSearchString(std::string params, const std::string se
 }
 
 dwStatus HesaiLidar::loadUserParams(const char* params) {
-    // 获取本地角度校准文件的路径，无关紧要的参数获取不到不return, 也许这里耗时太长了？
     // std::cout << "HesaiLidar::loadUserParams, params = " << params << std::endl;
     std::string paramsString = params;
 
     m_correctionFilePath = getSearchString(paramsString, "correction_file=");
-    // 设备的类型， 禾赛自定义
     m_lidarType = getSearchString(paramsString, "lidar_type=");
-    // 雷达的类型，一般为CUSTOM_EX
     m_deviceStr = getSearchString(paramsString, "device=");
 
     // std::cout << "loadUserParams: device=" << m_deviceStr << ",lidar_type=" << m_lidarType
     //           << ",correction_file=" << m_correctionFilePath << std::endl;
 
-    // 以下为实时雷达需要的端口信息
+    // connection params
     m_ipAddress    = getSearchString(paramsString, "ip=");
     m_hostIpAddress = getSearchString(paramsString, "host_ip=");
     m_multcastIpAddress = getSearchString(paramsString, "multcast_ip=");

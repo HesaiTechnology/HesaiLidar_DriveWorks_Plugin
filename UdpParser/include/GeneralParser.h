@@ -1,5 +1,6 @@
 #ifndef GENERAL_PARSER_H_
 #define GENERAL_PARSER_H_
+
 #define CIRCLE (36000)
 #define MAX_LASER_NUM (512)
 
@@ -27,10 +28,10 @@ class GeneralParser {
   virtual dwStatus getDecoderConstants(_dwSensorLidarDecoder_constants* constants) = 0;
 
   /**
-   * @brief 解析单个点云包
+   * @brief Decode the data buffer to a single packet
    * 
    * @param[out] output driveworks规定的点云格式包
-   * @param[in] buffer UDP收到的字节流
+   * @param[in] buffer data buffer of UDP
    * @param[in] length 字节流长度
    * @param[out] data xyzi坐标点数据
    * @param[out] pointRTHI rthi格式的坐标点数据
@@ -47,33 +48,24 @@ class GeneralParser {
   virtual int LoadCorrectionFile(std::string correction_path);
 
   /**
-   * @brief 解析出不同格式的校正文件结构体，子类定义该结构体, 解析成功后需将m_bGetCorrectionFile置为true
-   * 
-   * @param correction_string 校正文件的字节流
-   * @return int 
+   * @brief Parse the correction byte into typical data structure used in the derived class
+   * Global flag m_bGetCorrectionFile is set to true when it decodes succussfully
+   * Used in function 'LoadCorrectionFile', need to be override in the derived class
+   * QT128 P128 are the same
    */
-  virtual int ParseCorrectionString(char *correction_string) = 0;
+  virtual int ParseCorrectionString(char *correction_string);
 
   /**
-   * @brief 解析字节流，optional
-   * 
-   * @param firetime 激光器发光屏闪的校正文件流
-   * @return int 
+   * @brief Decode the correction bytes that controls the sequence of laser emitting, Only for QT128 
    */
   virtual int LoadFiretimesString(const char *firetimes);
 
   /**
-   * @brief 从本地路径中读取firetime文件加载到类中
-   * @param firetimes_path 本地文件路径
+   * @brief Load and decode the firetime file to correct lidar. For QT128 it displays normally even without.
+   * In the Web 192.168.0.1 you can check if the firetime of QT128 exist or not
    */
   virtual void LoadFiretimesFile(std::string firetimes_path);
   
-  /**
-   * @brief 解析雷达的通道配置信息
-   * 
-   * @param channelconfig 通道配置的字节流
-   * @return int 0为成功
-   */
   virtual int LoadChannelConfigString(const char *channelconfig);
 
   virtual void LoadChannelConfigFile(std::string channel_config_path);
@@ -87,14 +79,14 @@ class GeneralParser {
   std::vector<int32_t> m_vEleCorrection;
   std::vector<int32_t> m_vAziCorrection;
 
-  ////////////////// Nvidia Driveworks plugin要求传入 //////////////////
+  ////////////////// Parameters Required by Nvidia Driveworks //////////////////
   /**
    * @brief 从解析的校正文件中获取每一线的垂直角信息, 不同雷达的校正结构体文件不同，需子类中获取
    * 
    * @param channel 如128线有128个通道，
    * @return int16_t 每一线的垂直角信息
    */
-  virtual int16_t GetVecticalAngle(int channel) = 0;
+  virtual int16_t GetVecticalAngle(int channel);
 
   /**
    * @brief 对比最近的水平方位角，决定是否要分帧,是否扫描完毕一圈，是否发生从355-0的跳跃判断
@@ -104,7 +96,7 @@ class GeneralParser {
    * @return true 完成一个扫描周期，例如一圈360度，获得一帧数据
    * @return false 分度角仍在一个扫描周期内
    */
-  bool IsNeedFrameSplit(uint16_t azimuth, int field);
+  bool IsNeedFrameSplit(uint16_t azimuth);
 
   // 是否获取到校正文件，解析成功后置true
   bool m_bGetCorrectionFile;
@@ -112,8 +104,6 @@ class GeneralParser {
   bool m_bIsDualReturn;
   // 雷达内部转轴转速？
   uint16_t m_u16SpinSpeed;
-  // 水平方位角，默认QT雷达，每0.01度一分区
-  static int maxAzimuthLen;
   
  protected:
 
@@ -136,11 +126,12 @@ class GeneralParser {
   void PrintDwPacket(const dwLidarDecodedPacket *packet);
 
   /**
-   * @brief 由于boost库无法交叉编译至Nvidia的系统中，故不引入boost库
-   * 
-   * @param[out] result 字符串数组
-   * @param[in] line 需要分解的字符串
-   * @param[in] c 字符，如','
+   * @brief return the string vector split by char
+   * To avoid introduce the boost library as cross complie of drivework failed
+   *
+   * @param[out] result  return the string vector
+   * @param[in] line string to be split
+   * @param[in] c symbol to be split, like ','
    */
   inline void HSSplit(std::vector<std::string>& result, std::string s, char c) {
     size_t pos = 0;
@@ -163,7 +154,7 @@ class GeneralParser {
       return rad * 57.29577951308232087721;
   }
   
-  // 用于距离校正，该函数仅QT用了，且未启用
+  // 用于距离校正，该函数仅QT用了，且未启用 For Pandar128
   float m_fCosAllAngle[CIRCLE];
   float m_fSinAllAngle[CIRCLE];
   int m_iReturnMode;
@@ -174,16 +165,13 @@ class GeneralParser {
   static const uint16_t kTcpPort = 9347;
   static const uint16_t kUdpPort = 2368;
   static const uint16_t kBufSize = 1500;
-  static const uint16_t kFrontWidthPacketSize = 1;
   static const uint16_t kChannelSize = 256;
-  static const double kLightCoefficient;
-  static const double kConvertWidthUnit;
-  static const double kDualWidthUnit;
 
   // 水平方位角，*100之后的
   static const uint16_t kFrameStartAzimuth = 0;
   static const uint16_t kFrameEndAzimuth = 36000;
   // 10度的意思吗？360-0时发生跳跃？通过捕捉这个跳跃判断一个scan是否结束
+  // 显然QT128 和 P128定义的分度角不一样 TODO
   static const uint16_t kAzimuthTolerance = 1000;
   static const uint16_t kFramesNumMax = 10;
   static const uint16_t kPackageNumMax = 4000;
@@ -193,8 +181,6 @@ class GeneralParser {
   static const int32_t kThreadCount = 3;       // number of processing thread
   static const uint32_t kTimeout = 100000000;  // handle thread wait time
   static const long kNSecToSec = 1000000000;   // 1sec = 1000000000nsec
-  static const double kDistUnitWidthWithDiff;
-  static const double kWidthUnitWithDiff;
 
   UdpPacket m_packet;
   bool m_bBlockProcess;
@@ -202,13 +188,12 @@ class GeneralParser {
   uint16_t m_u16FramesSize;
   uint16_t m_u16FrameStartAzimuth;
   uint16_t m_u16FrameEndAzimuth;
+  // 记录上一个水平方位角用于分帧
   uint16_t m_u16LastAzimuth;
 
-  UdpFrame_t m_currentFrame;
-  UdpFrameArray_t m_vFrames;
   // boost::mutex m_mutex;
 
-  // QT128等雷达有，AT128没有
+  // Only for QT128 and etc，not for AT128
   std::vector<double> m_vFiretimeCorrection;
   bool m_bEnableFireTimeCorrection;
   bool m_bEnableDistanceCorrection;

@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (2022) [Hesai Technology] All rights reserved.
+// Copyright [2022] [Hesai Technology Co., Ltd] 
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,11 +25,11 @@ Udp1_4_Parser::Udp1_4_Parser() {
 }
 
 Udp1_4_Parser::~Udp1_4_Parser() { 
-  printf("release general parser\n"); 
+  // printf("release general parser\n"); 
 }
 
-dwStatus Udp1_4_Parser::getDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
-    // printf("getDecoderConstants: \n");
+dwStatus Udp1_4_Parser::GetDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
+    // printf("GetDecoderConstants: \n");
     // Each packet contains QT的一个包里1127个byte, 按1500, 雷达是单回波还是双回波，频率10Hz已确定 15000 150000 15000
     constants->maxPayloadSize = 1500;
     // 每秒包数量，360/0.4*10 = 9000，如果是双回波的多出一倍*2  18000 36000 

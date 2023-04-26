@@ -1,3 +1,20 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright [2022] [Hesai Technology Co., Ltd] 
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -14,7 +31,7 @@
 
 static const size_t packet_size = sizeof(UdpPacket().m_u8Buf);
 
-void InputSocket::init(std::string deviceipaddr, std::string hostIpAddr, std::string multcastIpAddr, uint16_t lidarport, uint16_t gpsport) {
+void InputSocket::InitSocket(std::string deviceipaddr, std::string hostIpAddr, std::string multcastIpAddr, uint16_t lidarport, uint16_t gpsport) {
 	m_sDeviceIpAddr = deviceipaddr;
 	m_sMultcastIpAddr = multcastIpAddr;
 	m_u16LidarPort = lidarport;
@@ -30,7 +47,7 @@ void InputSocket::init(std::string deviceipaddr, std::string hostIpAddr, std::st
 	m_iSockGpsfd = -1;
 	m_u32Sequencenum = 0;
 
-	// printf("InputSocket: init, UDP port=%d, multcastIp=%s, gpsport=%d\n", lidarport, multcastIpAddr.c_str(), gpsport);
+	// printf("InputSocket: InitSocket, UDP port=%d, multcastIp=%s, gpsport=%d\n", lidarport, multcastIpAddr.c_str(), gpsport);
 	m_iSockfd = socket(PF_INET, SOCK_DGRAM, 0);
 	if(m_iSockfd == -1) {
 		perror("socket");
@@ -109,13 +126,13 @@ void InputSocket::init(std::string deviceipaddr, std::string hostIpAddr, std::st
   	}
 }
 
-void InputSocket::close_socket() { 
+void InputSocket::CloseSocket() { 
 	if(m_iSockGpsfd >0) close(m_iSockGpsfd);
 	if(m_iSockfd >0) close(m_iSockfd); 
 }
 
-PacketType InputSocket::getPacket(UdpPacket *&pkt, int timeout) {
-	// printf("InputSocket: getPacket, starting\n");
+PacketType InputSocket::GetPacket(UdpPacket *&pkt, int timeout) {
+	// printf("InputSocket: GetPacket, starting\n");
 	timespec time;
 	memset(&time, 0, sizeof(time));
 
@@ -139,11 +156,11 @@ PacketType InputSocket::getPacket(UdpPacket *&pkt, int timeout) {
 		return ERROR_PACKET;
 	}
 	if(retval == 0) { // poll() timeout?
-		printf("InputSocket: getPacket, Pandar poll() timeout\n");
+		printf("InputSocket: GetPacket, Pandar poll() timeout\n");
 		return TIMEOUT;
 	}
 	if((fds[0].revents & POLLERR) || (fds[0].revents & POLLHUP) ||(fds[0].revents & POLLNVAL)) { // device error?
-		printf("InputSocket: getPacket, poll() reports Pandar error\n");
+		printf("InputSocket: GetPacket, poll() reports Pandar error\n");
 		return ERROR_PACKET;
 	}
 

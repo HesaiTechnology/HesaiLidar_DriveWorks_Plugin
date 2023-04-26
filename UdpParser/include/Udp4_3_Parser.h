@@ -1,3 +1,28 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright [2022] [Hesai Technology Co., Ltd] 
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @file
+ * <b>HESAI Plugin for DriveWorks: Lidar Sensor UDP Parser</b>
+ *
+ * @b Description: This file defines the udp parser for AT128.
+ */
+
 #ifndef UDP4_3_PARSER_H_
 #define UDP4_3_PARSER_H_
 
@@ -11,8 +36,8 @@
 #define PANDAR_AT128_EDGE_AZIMUTH_OFFSET (7500)
 #define PANDAR_AT128_EDGE_AZIMUTH_SIZE (1600)
 
+#include <array>
 #include "GeneralParser.h"
-#include "PointCloudType.h"
 
 struct PandarATCorrectionsHeader {
   uint8_t delimiter[2];
@@ -90,25 +115,18 @@ class Udp4_3_Parser : public GeneralParser {
   Udp4_3_Parser();
   virtual ~Udp4_3_Parser();
 
-  virtual dwStatus getDecoderConstants(_dwSensorLidarDecoder_constants* constants) override;
+  virtual dwStatus GetDecoderConstants(_dwSensorLidarDecoder_constants* constants) override;
   
   virtual dwStatus ParserOnePacket(dwLidarDecodedPacket *output, const uint8_t *buffer, const size_t length, \
                                    dwLidarPointXYZI* data, dwLidarPointRTHI* pointRTHI) override;     
   
-  // 从PandarATCorrections中获取
+  // Get vectical angle of each channel from PandarATCorrections
   int16_t GetVecticalAngle(int channel) override;
-  // 保存获取的角度文件-子类私有
-  PandarATCorrections m_PandarAT_corrections;
 
 private:
-  /**
-   * @brief 将角度文件的字节流解析，保存在类的m_PandarAT_corrections
-   * 
-   * @param correction_string 字节流
-   * @return int 错误码
-   */
-  int ParseCorrectionString(char *correction_string);
-
+  int ParseCorrectionString(char *correction_string) override;
+  // Save correction file of azimuth and elevation
+  PandarATCorrections m_PandarAT_corrections;
 };
 
 #endif  // UDP4_3_PARSER_H_

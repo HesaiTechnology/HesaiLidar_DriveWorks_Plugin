@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (2022) [Hesai Technology] All rights reserved.
+// Copyright [2022] [Hesai Technology Co., Ltd] 
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ GeneralParser::~GeneralParser() {
 }
 
 int GeneralParser::LoadCorrectionFile(std::string correction_path) {
-  printf("GeneralParser: LoadCorrectionFile, path=%s \n", correction_path.c_str());
+  printf("GeneralParser: load correction file, path=%s \n", correction_path.c_str());
   std::ifstream fin(correction_path);
   if (fin.is_open() == false) {
     printf("Open correction file Error, path=%s\n", correction_path.c_str());

@@ -12,9 +12,6 @@
 #define SHED_FIFO_PRIORITY_MEDIUM    70
 #define SHED_FIFO_PRIORITY_LOW        1
 
-extern void ShowThreadPriorityMaxMin (int policy);
-extern void SetThreadPriority (int policy, int priority);
-
 extern unsigned int GetTickCount();
 
 extern unsigned int GetMicroTickCount();

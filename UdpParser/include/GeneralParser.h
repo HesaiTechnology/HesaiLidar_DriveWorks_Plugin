@@ -1,3 +1,21 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright [2022] [Hesai Technology Co., Ltd] 
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
 #ifndef GENERAL_PARSER_H_
 #define GENERAL_PARSER_H_
 
@@ -13,8 +31,6 @@
 #include <dw/sensors/plugins/lidar/LidarDecoder.h>
 #include <dw/sensors/plugins/lidar/LidarPlugin.h>
 
-#include "PointCloudType.h"
-
 class GeneralParser {
  public:
   GeneralParser();
@@ -24,7 +40,7 @@ class GeneralParser {
    * @brief Introduce characteristic parameters of each lidar to Driveworks, e.g. speed
    * @param[out] constants return struct stored the params
    */
-  virtual dwStatus getDecoderConstants(_dwSensorLidarDecoder_constants* constants) = 0;
+  virtual dwStatus GetDecoderConstants(_dwSensorLidarDecoder_constants* constants) = 0;
 
   /**
    * @brief Decode the data buffer to a single packet

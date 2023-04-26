@@ -1,9 +1,25 @@
-#include "Udp4_3_Parser.h"
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright [2022] [Hesai Technology Co., Ltd] 
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
+#include <fstream>
+#include "Udp4_3_Parser.h"
 #include "HsLidarStV3.h"
 #include "LidarProtocolHeader.h"
-#include <fstream>
-// #include "UdpParser.h"
 
 Udp4_3_Parser::Udp4_3_Parser() {
   // printf("Udp4_3_Parser: creating parser for lidar AT128 \n");
@@ -125,7 +141,7 @@ int Udp4_3_Parser::ParseCorrectionString(char *correction_string) {
   return -1;
 }
 
-dwStatus Udp4_3_Parser::getDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
+dwStatus Udp4_3_Parser::GetDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
   // 必传-异常退出, 填10太小直接崩溃 500会崩，800还可以？ 1118AT一个包里byte数
   constants->maxPayloadSize = 1500;
   // 必传-virtual会进入loading黑屏卡死, 过大多加2个0，显示界面错位！加4个0则直接退出 12500
@@ -271,7 +287,7 @@ dwStatus Udp4_3_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
       // PrintDwPoint(&pointXYZI[index]);
     }
     if (IsNeedFrameSplit(u16Azimuth)) {
-      // 未置true会一直显示loading，几秒后超时退出崩溃
+      // ! Error crack the window and show loading if scanComplete never is never set true
       output->scanComplete = true;
     }
     m_u16LastAzimuth = u16Azimuth;
@@ -280,10 +296,10 @@ dwStatus Udp4_3_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
     
   }
 
-  // 不传不影响显示
+  // Will not influence the display
   output->maxHorizontalAngleRad = (maxAzimuth / 25600.0f) / 180 * M_PI;
   output->minHorizontalAngleRad = (minAzimuth / 25600.0f) / 180 * M_PI;
-  // 不传点进去只是一个点也不显示，不会崩溃
+  // Display program show black screen if no incoming points
   output->pointsRTHI = pointRTHI;
   output->pointsXYZI = pointXYZI;
 

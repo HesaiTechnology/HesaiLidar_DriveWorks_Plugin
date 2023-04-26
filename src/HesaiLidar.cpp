@@ -1,3 +1,20 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright [2022] [Hesai Technology Co., Ltd] 
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
 #include <thread>
 #include <chrono>
@@ -49,7 +66,7 @@ dwStatus HesaiLidar::createSensor(dwSALHandle_t sal, const char* params)
 dwStatus HesaiLidar::releaseSensor()
 {
     if (!isVirtualSensor()) {
-        m_inputSocket.close_socket();
+        m_inputSocket.CloseSocket();
     }
     return DW_SUCCESS;
 }
@@ -58,7 +75,7 @@ dwStatus HesaiLidar::startSensor()
 {
     // std::cout << "HesaiLidar::startSensor, loading correction files" << std::endl;
     if (!isVirtualSensor()) {
-        m_inputSocket.init(m_ipAddress, m_hostIpAddress, m_multcastIpAddress, m_udpPort); 
+        m_inputSocket.InitSocket(m_ipAddress, m_hostIpAddress, m_multcastIpAddress, m_udpPort); 
     }
     
     if (loadLidarCorrection() != DW_SUCCESS) {
@@ -85,7 +102,7 @@ dwStatus HesaiLidar::startSensor()
 dwStatus HesaiLidar::stopSensor()
 {
     if (!isVirtualSensor()) {
-        m_inputSocket.close_socket();
+        m_inputSocket.CloseSocket();
     }    
     return DW_SUCCESS;
 }
@@ -96,7 +113,7 @@ dwStatus HesaiLidar::resetSensor()
     resetSlot();
 
     // if (!isVirtualSensor())
-    //     m_inputSocket.close_socket();
+    //     m_inputSocket.CloseSocket();
 
     return DW_SUCCESS;
 }
@@ -114,7 +131,7 @@ dwStatus HesaiLidar::readRawData(const uint8_t** data, size_t* size, dwTime_t* t
         UdpPacket* packet = reinterpret_cast<UdpPacket*>(&(result->rawData[PACKET_OFFSET]));
         while (1)
         {
-            PacketType type = m_inputSocket.getPacket(packet, timeout_us / 1000);
+            PacketType type = m_inputSocket.GetPacket(packet, timeout_us / 1000);
             if (type ==  POINTCLOUD_PACKET) break;
             if (type ==  TIMEOUT) return DW_TIME_OUT;
             usleep(10);
@@ -264,7 +281,7 @@ dwStatus HesaiLidar::loadFiretimes() {
 dwStatus HesaiLidar::getDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
     // ! Must assign deviceString to be CUSTOM_EX, or A black screen Error might occur
     memcpy(&constants->properties.deviceString, m_deviceStr.c_str(), 256);
-    m_Parser->getDecoderConstants(constants);
+    m_Parser->GetDecoderConstants(constants);
 
     return DW_SUCCESS;
 }

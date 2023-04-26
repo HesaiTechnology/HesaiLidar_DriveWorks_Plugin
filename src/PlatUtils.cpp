@@ -1,3 +1,21 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright [2022] [Hesai Technology Co., Ltd] 
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
 #include <PlatUtils.h>
 #include <sys/syscall.h>
 #include <time.h>
@@ -6,28 +24,6 @@
 
 #define gettid() syscall(SYS_gettid)
 static const int kTimeStrLen = 1000;
-
-void ShowThreadPriorityMaxMin(int policy)
-{
-  int priority = sched_get_priority_max(policy);
-  printf("policy %d max_priority = %d\n", policy, priority);
-  priority = sched_get_priority_min(policy);
-  printf("policy %d, min_priority = %d\n", policy, priority);
-}
-
-void SetThreadPriority(int policy, int priority)
-{
-  // printf("set thread %lu, tid %ld, policy %d and priority %d\n", pthread_self(),
-        //  gettid(), policy, priority);
-  sched_param param;
-  param.sched_priority = priority;
-  pthread_setschedparam(pthread_self(), policy, &param);
-
-  int ret_policy;
-  pthread_getschedparam(pthread_self(), &ret_policy, &param);
-  // printf("get thead %lu, tid %ld, policy %d and priority %d\n", pthread_self(),
-  //        gettid(), ret_policy, param.sched_priority);
-}
 
 unsigned int GetTickCount()
 {
@@ -64,8 +60,6 @@ uint64_t GetMicroTickCountU64()
   }
   return ret;
 }
-
-int GetAvailableCPUNum() { return sysconf(_SC_NPROCESSORS_ONLN); }
 
 // 2004-05-03T17:30:08+08:00
 int GetCurrentTime(std::string &sTime, int nFormat)

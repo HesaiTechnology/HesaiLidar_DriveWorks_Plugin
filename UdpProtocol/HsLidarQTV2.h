@@ -4,7 +4,7 @@
  * @version 0.1
  * @date 2022-10-13
  * 
- * @copyright Copyright (c) 2022 Hesai Technology Co., Ltd
+ * @copyright Copyright (c) 2022 Hesai Technology Co., Ltd Co., Ltd
  * 
  */
 #ifndef HS_LIDAR_QT_V2_H

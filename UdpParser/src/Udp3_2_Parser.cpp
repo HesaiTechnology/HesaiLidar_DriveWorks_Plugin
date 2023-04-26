@@ -149,8 +149,8 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
   return DW_SUCCESS;
 }
 
-dwStatus Udp3_2_Parser::getDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
-  // printf("getDecoderConstants: \n");
+dwStatus Udp3_2_Parser::GetDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
+  // printf("GetDecoderConstants: \n");
   // QT的一个包里1127个byte, 按1500, 雷达是单回波还是双回波，频率10Hz已确定 15000 150000 15000
   constants->maxPayloadSize = 1500;
   // 每秒包数量，360/0.4*10 = 9000，如果是双回波的多出一倍*2  18000 36000 

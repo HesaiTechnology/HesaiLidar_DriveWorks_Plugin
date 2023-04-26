@@ -1,3 +1,21 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright [2022] [Hesai Technology Co., Ltd] 
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
 #ifndef __PANDAR_INPUT_H
 #define __PANDAR_INPUT_H
 
@@ -34,7 +52,7 @@ class InputSocket
 {
 public:
 	InputSocket() {};
-    ~InputSocket() { close_socket(); };
+    ~InputSocket() { CloseSocket(); };
 	
 	/** @brief Initialize two socket object, UDP and GPS
 	 *
@@ -42,9 +60,9 @@ public:
 	 *  @param lidarport lidar udp port number
 	 *  @param gpsport gps port number
 	 */
-	void init(std::string deviceipaddr, std::string hostIpAddr, std::string multcastIpAddr, uint16_t lidarport = DATA_PORT_NUMBER, uint16_t gpsport = GPS_PORT_NUMBER);
+	void InitSocket(std::string deviceipaddr, std::string hostIpAddr, std::string multcastIpAddr, uint16_t lidarport = DATA_PORT_NUMBER, uint16_t gpsport = GPS_PORT_NUMBER);
 
-	void close_socket();
+	void CloseSocket();
 
 	/**
 	 * @brief Get a single packet via UDP socket
@@ -53,7 +71,7 @@ public:
 	 * @param[in] timeout set timeout of polling data
 	 * @return type of the packet, judged by the size
 	 */
-	PacketType getPacket(UdpPacket *&pkt, int timeout);
+	PacketType GetPacket(UdpPacket *&pkt, int timeout);
 
 protected:
 	uint16_t m_u16LidarPort;

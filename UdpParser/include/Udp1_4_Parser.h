@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (2022) [Hesai Technology] All rights reserved.
+// Copyright [2022] [Hesai Technology Co., Ltd] 
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,13 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @file
+ * <b>HESAI Plugin for DriveWorks: Lidar Sensor UDP Parser</b>
+ *
+ * @b Description: This file defines the udp parser for Pandar128.
+ */
+
 #ifndef UDP1_4_PARSER_H_
 #define UDP1_4_PARSER_H_
 
@@ -24,7 +31,6 @@
 #define HS_LIDAR_P128_LASER_NUM (128)
 
 #include "GeneralParser.h"
-#include "PointCloudType.h"
 #include "HsLidarMeV4.h"
 
 // For Pandar128
@@ -33,7 +39,7 @@ class Udp1_4_Parser : public GeneralParser {
   Udp1_4_Parser();
   virtual ~Udp1_4_Parser();
 
-  dwStatus getDecoderConstants(_dwSensorLidarDecoder_constants* constants) override;
+  dwStatus GetDecoderConstants(_dwSensorLidarDecoder_constants* constants) override;
   
   virtual dwStatus ParserOnePacket(dwLidarDecodedPacket *output, const uint8_t *buffer, const size_t length, \
                                    dwLidarPointXYZI* pointXYZI, dwLidarPointRTHI* pointRTHI) override;

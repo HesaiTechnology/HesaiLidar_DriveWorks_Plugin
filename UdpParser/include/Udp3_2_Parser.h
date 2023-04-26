@@ -1,12 +1,28 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright [2022] [Hesai Technology Co., Ltd] 
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
 /**
- * @file Udp3_2_Parser.h
- * @brief 禾赛QT128雷达的UDP包解析
- * @version 0.1
- * @date 2022-10-13
- * 
- * @copyright Copyright (c) 2022 Hesai Technology Co., Ltd
- * 
+ * @file
+ * <b>HESAI Plugin for DriveWorks: Lidar Sensor UDP Parser</b>
+ *
+ * @b Description: This file defines the udp parser for QT128.
  */
+
 #ifndef UDP3_2_PARSER_H_
 #define UDP3_2_PARSER_H_
 
@@ -20,7 +36,6 @@
 
 #include "GeneralParser.h"
 #include "HsLidarQTV2.h"
-#include "PointCloudType.h"
 
 // QT128的校正文件，通道校正文件, 也没啥用，全123456就和默认值一样
 struct PandarQTChannelConfig {
@@ -40,23 +55,8 @@ class Udp3_2_Parser : public GeneralParser {
   Udp3_2_Parser();
   virtual ~Udp3_2_Parser();
 
-  dwStatus getDecoderConstants(_dwSensorLidarDecoder_constants* constants) override;
-  
-  /**
-   * @brief 从校正文件中获得两组水平校正和垂直校正量
-   *        对如下两数组赋值并初始化 m_vEleCorrection m_vAziCorrection
-   *        QT128的雷达还有需要解析 firetime channelconfig
-   * 
-   * @param correction_content 读到的字节流
-   * @return int 0为正常，其他数字错误
-   */
-  // virtual int ParseCorrectionString(char *correction_content) override;
-  
-  /**
-   * @brief 解析获得单个包
-   * 
-   * @param pointRTHI 不是指一个point，而是一个二维的数组
-   */
+  dwStatus GetDecoderConstants(_dwSensorLidarDecoder_constants* constants) override;
+
   virtual dwStatus ParserOnePacket(dwLidarDecodedPacket *output, const uint8_t *buffer, const size_t length, \
                                    dwLidarPointXYZI* pointXYZI, dwLidarPointRTHI* pointRTHI) override;     
 

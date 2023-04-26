@@ -1,4 +1,38 @@
-
+/*
+ *  Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2019 Hesai Photonics Technology Co., Ltd
+ *
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the copyright holder(s) nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
 #ifndef HS_LIDAR_ME_V4_H
 #define HS_LIDAR_ME_V4_H
 
@@ -28,43 +62,12 @@ struct HS_LIDAR_BODY_CHN_UNIT_NO_CONF_ME_V4 {
 
   uint16_t GetDistance() const { return little_to_native(m_u16Distance); }
   uint8_t GetReflectivity() const { return m_u8Reflectivity; }
-
-  // code from fw, when udp type = 7:
-  // for last return: low threshold width = distance / 2 ** 12 + reflectivity * 2 ** 4
-  //                  high threshold width = distance % 2 ** 12
-  // for strongest return: gate = reflectivity
-  uint16_t GetLowWidth() const {
-    return m_u8Reflectivity << 4 | m_u16Distance >> 12;
-  }
-  uint16_t GetHighWidth() const {
-    return m_u16Distance & 0x0FFF;
-  }
-  uint8_t GetGate() const { return m_u8Reflectivity; }
-  uint16_t GetFront() const { return m_u16Distance; }
-  uint16_t GetLowWidthWithDiff() const {
-    return m_u8Reflectivity << 3 | m_u16Distance >> 13;
-  }
-  uint16_t GetWidthDiff() const {
-    return (m_u16Distance & 0x1FFF) >> 6;
-  }
-  uint16_t GetWidthTempError() const {
-    return m_u16Distance & 0x03F;
-  }
-  uint16_t GetDistanceWithWidthDiff() const {
-    return little_to_native(m_u16Distance >> 1);
-  }
-  uint16_t GetTempErrorSymbol() const {
-    return m_u16Distance & 0x1;
-  }
-
   void Print() const {
     printf("HS_LIDAR_BODY_CHN_UNIT_NO_CONF_ME_V4:\n");
     printf("Dist:%u, Reflectivity: %u\n", GetDistance(), GetReflectivity());
   }
   void PrintMixData() const {
     printf("HS_LIDAR_BODY_CHN_UNIT_NO_CONF_ME_V4:\n");
-    printf("LowWidth:%hu, HighWidth: %hu Gate: %u Front: %hu\n",
-           GetLowWidth(), GetHighWidth(), GetGate(), GetFront());
   }
 } PACKED;
 
@@ -77,33 +80,6 @@ struct HS_LIDAR_BODY_CHN_UNIT_ME_V4 {
   uint8_t GetReflectivity() const { return m_u8Reflectivity; }
   uint8_t GetConfidenceLevel() const { return m_u8Confidence; }
 
-  // code from fw, when udp type = 7:
-  // for last return: low threshold width = distance / 2 ** 12 + reflectivity * 2 ** 4
-  //                  high threshold width = distance % 2 ** 12
-  // for strongest return: gate = reflectivity
-  uint16_t GetLowWidth() const {
-    return m_u8Reflectivity << 4 | m_u16Distance >> 12;
-  }
-  uint16_t GetHighWidth() const {
-    return m_u16Distance & 0x0FFF;
-  }
-  uint8_t GetGate() const { return m_u8Reflectivity; }
-  uint16_t GetFront() const { return m_u16Distance; }
-  uint16_t GetLowWidthWithDiff() const {
-    return m_u8Reflectivity << 3 | m_u16Distance >> 13;
-  }
-  uint16_t GetWidthDiff() const {
-    return (m_u16Distance & 0x1FFF) >> 6;
-  }
-  uint16_t GetWidthTempError() const {
-    return m_u16Distance & 0x03F;
-  }
-  uint16_t GetDistanceWithWidthDiff() const {
-    return little_to_native(m_u16Distance >> 1);
-  }
-  uint16_t GetTempErrorSymbol() const {
-    return m_u16Distance & 0x1;
-  }
 
   void Print() const {
     printf("HS_LIDAR_BODY_CHN_UNIT_ME_V4:\n");
@@ -112,8 +88,6 @@ struct HS_LIDAR_BODY_CHN_UNIT_ME_V4 {
   }
   void PrintMixData() const {
     printf("HS_LIDAR_BODY_CHN_UNIT_ME_V4:\n");
-    printf("LowWidth:%hu, HighWidth: %hu Gate: %u Front: %hu\n",
-           GetLowWidth(), GetHighWidth(), GetGate(), GetFront());
   }
 } PACKED;
 
@@ -247,6 +221,30 @@ struct HS_LIDAR_TAIL_ME_V4 {
   }
   bool IsStongestFirstReturn() const {
     return m_u8ReturnMode == kStongestFirstReturn;
+  }
+  int64_t GetMicroLidarTimeU64() const {
+    if (m_u8UTC[0] != 0) {
+			struct tm t = {0};
+			t.tm_year = m_u8UTC[0] + 100;
+			if (t.tm_year >= 200) {
+				t.tm_year -= 100;
+			}
+			t.tm_mon = m_u8UTC[1] - 1;
+			t.tm_mday = m_u8UTC[2];
+			t.tm_hour = m_u8UTC[3];
+			t.tm_min = m_u8UTC[4];
+			t.tm_sec = m_u8UTC[5];
+			t.tm_isdst = 0;
+			return (mktime(&t)) * 1000000 + GetTimestamp();
+		}
+		else {
+      uint32_t utc_time_big = *(uint32_t*)(&m_u8UTC[0] + 2);
+      int64_t unix_second = ((utc_time_big >> 24) & 0xff) |
+              ((utc_time_big >> 8) & 0xff00) |
+              ((utc_time_big << 8) & 0xff0000) |
+              ((utc_time_big << 24));
+      return unix_second * 1000000 + GetTimestamp();
+		}
   }
 
   uint8_t GetFactoryInfo() const { return m_u8FactoryInfo; }

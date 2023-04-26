@@ -1,7 +1,7 @@
 #ifndef GENERAL_PARSER_H_
 #define GENERAL_PARSER_H_
 
-#define CIRCLE (36000)
+#define CIRCLE (360000)  // correction file has 3 digits, plus 1000
 #define MAX_LASER_NUM (512)
 
 #include <semaphore.h>
@@ -40,6 +40,10 @@ class GeneralParser {
   virtual dwStatus ParserOnePacket(dwLidarDecodedPacket *output, const uint8_t *buffer, const size_t length, \
                                    dwLidarPointXYZI* pointXYZI, dwLidarPointRTHI* pointRTHI) = 0;     
   
+  virtual int32_t CalibrateAzimuth(int32_t azimuth, unsigned int laserId);
+
+  dwStatus ComputeDwPoint(dwLidarPointXYZI& pointXYZI, dwLidarPointRTHI& pointRTHI, double radius, int32_t elevation, int32_t azimuth, uint8_t intensity);
+
   /**
    * @brief 读取本地的校正文件，获字节流调LoadCorrectionString实际解析
    * 
@@ -104,6 +108,10 @@ class GeneralParser {
   bool m_bIsDualReturn;
   // 雷达内部转轴转速？
   uint16_t m_u16SpinSpeed;
+
+  // Use to debug
+  void PrintDwPoint(const dwLidarPointXYZI* point);
+  void PrintDwPoint(const dwLidarPointRTHI* point);
   
  protected:
 
@@ -114,9 +122,6 @@ class GeneralParser {
    * @return int64_t -1获取失败, utc数组的传入大小不是6
    */
   int64_t GetMicroLidarTimeU64(const uint8_t* utc, int size, uint32_t timestamp) const;
-
-  void PrintDwPoint(const dwLidarPointXYZI* pointXYZI);
-  void PrintDwPoint(const dwLidarPointRTHI* pointXYZI);
   
   /**
    * @brief 打印除包中点云之外的其他参数，如时间戳点数信息等
@@ -157,6 +162,8 @@ class GeneralParser {
   // 用于距离校正，该函数仅QT用了，且未启用 For Pandar128
   float m_fCosAllAngle[CIRCLE];
   float m_fSinAllAngle[CIRCLE];
+  int m_iAzimuthUnit = 1000;
+
   int m_iReturnMode;
   int m_iMotorSpeed;
   int m_iMaxPackageNum;

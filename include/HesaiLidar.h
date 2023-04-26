@@ -37,6 +37,7 @@ namespace lidar
 
 const std::string LIDAR_TYPE_AT128 = "AT128E2X";
 const std::string LIDAR_TYPE_QT128 = "QT128C2X";
+const std::string LIDAR_TYPE_P128 = "Pandar128E3X";
 
 const size_t SAMPLE_BUFFER_POOL_SIZE = 5;
 
@@ -220,7 +221,8 @@ protected:
     GeneralParser* m_Parser;
     dwLidarPointXYZI m_pointXYZI[21000][256];
     dwLidarPointRTHI m_pointRTHI[21000][256];
-    int count;
+    // record how many points in above buffer
+    int count = 0;
 
 };
 

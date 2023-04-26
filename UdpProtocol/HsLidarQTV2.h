@@ -11,7 +11,6 @@
 #define HS_LIDAR_QT_V2_H
 
 #include <LidarProtocolHeader.h>
-#include <LidarStatusInfoMe.h>
 
 #ifdef _MSC_VER
 #define PACKED

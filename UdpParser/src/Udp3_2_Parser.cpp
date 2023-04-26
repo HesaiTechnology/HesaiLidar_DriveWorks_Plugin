@@ -28,7 +28,7 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
   // printf(" %x yes %x \n", buffer[0], buffer[1]);
   // std::chrono::milliseconds dura(2000);
   // std::this_thread::sleep_for(dura);
-  if (buffer[0] != 0xEE || buffer[1] != 0xFF || length < 0) {
+  if (length < 0 || buffer[0] != 0xEE || buffer[1] != 0xFF) {
     printf("Udp3_2_Parser: ParserOnePacket, invalid packet %x %x\n", buffer[0], buffer[1]);
     return DW_FAILURE;
   }
@@ -117,12 +117,12 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
       pointXYZI[index].x = xyDistance * sin_map[azimuthCorr];
       pointXYZI[index].y = xyDistance * cos_map[azimuthCorr];
       pointXYZI[index].z = distance * sin_map[elevationCorr];
-      pointXYZI[index].intensity = u8Intensity;
+      pointXYZI[index].intensity = static_cast<float>(u8Intensity / 255.0f);  // float type 0-1
 
       pointRTHI[index].radius = distance;
       pointRTHI[index].theta = azimuthCorr / 1000 / 180 * M_PI;
       pointRTHI[index].phi = elevationCorr / 1000 / 180 * M_PI;
-      pointRTHI[index].intensity = u8Intensity;
+      pointRTHI[index].intensity = static_cast<float>(u8Intensity / 255.0f);
       ++ index;
       // PrintDwPoint(&pointRTHI[index]);
       // PrintDwPoint(&pointXYZI[index]);
@@ -135,10 +135,14 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
     if (i == 0) minAzimuth = azimuth;
     else maxAzimuth = azimuth;
   } // 外循环
+  PrintDwPoint(&pointXYZI[index-2]);
+  // auto diff = sizeof(pointXYZI)/sizeof(pointXYZI[0]);
+  // printf("shuliang =%d", index);
 
   // 因为只有两个block，下标0的那个block是首个，取下标最末的那个block
   output->maxHorizontalAngleRad = ((maxAzimuth) / 100.0f) / 180 * M_PI;
   output->minHorizontalAngleRad = ((minAzimuth) / 100.0f) / 180 * M_PI;
+  // !the display only rely on xyzi
   output->pointsRTHI = pointRTHI;
   output->pointsXYZI = pointXYZI;
   // PrintDwPacket(output);

@@ -26,7 +26,7 @@ dwStatus HesaiLidar::createParser(std::string lidartype) {
         m_Parser = new Udp4_3_Parser();
     } else if (lidartype == LIDAR_TYPE_QT128) {
         m_Parser = new Udp3_2_Parser();
-    } else if (lidartype == LIDAR_TYPE_QT128) {
+    } else if (lidartype == LIDAR_TYPE_P128) {
         m_Parser = new Udp1_4_Parser();
     } else {
         std::cout << "createParser, create specific parser Error, lidartype=" << lidartype << std::endl;
@@ -178,12 +178,13 @@ dwStatus HesaiLidar::parseData(dwLidarDecodedPacket* output, const uint64_t host
         return DW_INVALID_HANDLE;
     }
     count++;
-    m_Parser->ParserOnePacket(output,msg->m_u8Buf,msg->m_i16Len ,m_pointXYZI[count], m_pointRTHI[count]);
+    m_Parser->ParserOnePacket(output, msg->m_u8Buf, msg->m_i16Len, m_pointXYZI[count], m_pointRTHI[count]);
     dwContext_getCurrentTime(&output->hostTimestamp, m_ctx);
     m_buffer.dequeue();
     
     output->hostTimestamp = hostTimeStamp;
     if (count > 20000) count = 0;
+    // m_Parser->PrintDwPoint(&output->pointsXYZI[0]);
 
     return DW_SUCCESS;
 }

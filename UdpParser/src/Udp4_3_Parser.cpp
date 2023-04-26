@@ -224,7 +224,7 @@ dwStatus Udp4_3_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
         (const unsigned char *)pAzimuth + sizeof(HS_LIDAR_BODY_AZIMUTH_ST_V3));
 
     int Azimuth = u16Azimuth * FINE_AZIMUTH_UNIT + u8FineAzimuth;
-    int count = 0;
+    int count = 0, field = 0;
     if ( m_bGetCorrectionFile) {
       while (count < m_PandarAT_corrections.header.frame_number &&
              (((Azimuth + MAX_AZI_LEN - m_PandarAT_corrections.l.start_frame[field]) % MAX_AZI_LEN +
@@ -261,12 +261,13 @@ dwStatus Udp4_3_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
       pointXYZI[index].x = xyDistance * m_PandarAT_corrections.sin_map[(azimuth)];
       pointXYZI[index].y = xyDistance * m_PandarAT_corrections.cos_map[(azimuth)];
       pointXYZI[index].z = distance * m_PandarAT_corrections.sin_map[(elevation)];
-      pointXYZI[index].intensity = u8Intensity;
+      pointXYZI[index].intensity = u8Intensity;  // divide 255.0f if 0-1
       pointRTHI[index].radius = distance;
       pointRTHI[index].theta = azimuth / AZIMUTH_UNIT / 180 * M_PI;
       pointRTHI[index].phi = elevation / AZIMUTH_UNIT / 180 * M_PI;
-      pointRTHI[index].intensity = u8Intensity; 
+      pointRTHI[index].intensity = u8Intensity;  // divide 255.0f if 0-1
       index++;
+      // PrintDwPoint(&pointRTHI[index]);
       // PrintDwPoint(&pointXYZI[index]);
     }
     if (IsNeedFrameSplit(u16Azimuth)) {

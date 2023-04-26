@@ -1,3 +1,4 @@
+#include <sstream>
 #include "GeneralParser.h"
 
 const std::string GeneralParser::kLidarIPAddr("192.168.1.201");
@@ -13,8 +14,8 @@ GeneralParser::GeneralParser() {
   m_iMaxPackageNum = kPackageNumMax;
   // TODO 总感觉这里有问题
   for(int i = 0; i < CIRCLE; ++i) {
-      m_fSinAllAngle[i] = std::sin(i * 2 * M_PI / CIRCLE);
-      m_fCosAllAngle[i] = std::cos(i * 2 * M_PI / CIRCLE);
+      m_fSinAllAngle[i] = std::sin(2 * M_PI * i / CIRCLE);
+      m_fCosAllAngle[i] = std::cos(2 * M_PI * i / CIRCLE);
   }
 }
 
@@ -47,8 +48,8 @@ int GeneralParser::LoadCorrectionFile(std::string correction_path) {
 }
 
 int GeneralParser::ParseCorrectionString(char* correction_content) {
-  // printf("ParseCorrectionString: parsing calibration content\n");
-  // printf("%s \n", correction_content);
+  printf("ParseCorrectionString: parsing calibration content\n");
+  printf("%s \n", correction_content);
   std::string correction_content_str = correction_content;
 	std::istringstream ifs(correction_content_str);
 	std::string line;
@@ -99,7 +100,7 @@ int GeneralParser::ParseCorrectionString(char* correction_content) {
 	for (int i = 0; i < lineCount; ++i) {
 		m_vEleCorrection[i] = static_cast<int32_t> (round(elevationList[i] * 1000));
 		m_vAziCorrection[i] = static_cast<int32_t> (round(azimuthList[i] * 1000));
-    // printf("m_vEleCorrection, %d \n", m_vEleCorrection[i]);
+    printf("m_vEleCorrection, %d  m_vAziCorrection, %d \n", m_vEleCorrection[i], m_vAziCorrection[i]);
 	}
 
   m_bGetCorrectionFile = true;
@@ -183,6 +184,36 @@ int64_t GeneralParser::GetMicroLidarTimeU64(const uint8_t* utc, int size, uint32
     return unix_second * 1000000 + timestamp;
   }
 }
+
+dwStatus GeneralParser::ComputeDwPoint(dwLidarPointXYZI& pointXYZI, dwLidarPointRTHI& pointRTHI, double radius, int32_t elevation, int32_t azimuth, uint8_t intensity) {
+  // only 0 - 360 00
+  double xyDistance = radius * this->m_fCosAllAngle[elevation];
+  pointXYZI.x = xyDistance * this->m_fSinAllAngle[azimuth];
+  pointXYZI.y = xyDistance * this->m_fCosAllAngle[azimuth];
+  pointXYZI.z = radius * this->m_fSinAllAngle[elevation];
+  pointXYZI.intensity = intensity;
+
+  pointRTHI.radius = radius;
+  // 100 is the unit!!
+  pointRTHI.theta = azimuth / m_iAzimuthUnit / 180 * M_PI;
+  pointRTHI.phi = elevation / m_iAzimuthUnit / 180 * M_PI;
+  pointRTHI.intensity = intensity;
+
+  return DW_SUCCESS;
+}
+
+int32_t GeneralParser::CalibrateAzimuth(int32_t azimuth, unsigned int laserId) {
+  // elevation = static_cast<int32_t>(elevation / 10.0f);
+  // azimuth = azimuth + static_cast<int32_t>(this->m_vAziCorrection[j] / 10.0f);
+  // printf("azimuth fffff00=%d \n", azimuth);
+  int32_t result = azimuth * 10 + this->m_vAziCorrection[laserId];
+  // printf("azimuth fffff=%d \n", result);
+  result = (360000 + result) % 360000;
+  // printf("azimuth=%d \n", result);
+  
+  return result;
+}
+
 
 void GeneralParser::PrintDwPoint(const dwLidarPointXYZI* point) {
   printf("x:%f, y:%f, z:%f, intensity:%f \n", point->x, point->y, point->z, point->intensity);

@@ -101,6 +101,9 @@ class Udp3_2_Parser : public GeneralParser {
   
   std::array<float, HS_LIDAR_QT128_AZIMUTH_SIZE> sin_map;
   std::array<float, HS_LIDAR_QT128_AZIMUTH_SIZE> cos_map;
+
+  // Only for QT128 and etc，not for AT128
+  std::vector<double> m_vFiretimeCorrection;
 };
 
 #endif  // UDP3_2_PARSER_H_

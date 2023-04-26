@@ -7,7 +7,6 @@ Udp3_2_Parser::Udp3_2_Parser() {
   // printf("Udp3_2_Parser: creating \n");
   m_iMotorSpeed = 0;
   m_iReturnMode = 0;
-  SetEnableDistanceCorrection(true);
 
   for (int i = 0; i < HS_LIDAR_QT128_AZIMUTH_SIZE; ++i) {
       // 360度对应 2* M_PI, 角度细分0.001 = 1/1000

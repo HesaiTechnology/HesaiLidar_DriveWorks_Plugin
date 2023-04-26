@@ -1,4 +1,4 @@
-// Copyright [2022] [Hesai Technology] All rights reserved.
+// Copyright (2022) [Hesai Technology] All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace plugins
 namespace lidar
 {
 
-#define HS_LIDAR_PLUGIN_VERSION "HESAI LIDAR PLUGIN V1.1.3"
+#define HS_LIDAR_PLUGIN_VERSION "HESAI LIDAR PLUGIN V1.1.4"
 
 const std::string LIDAR_TYPE_AT128 = "AT128E2X";
 const std::string LIDAR_TYPE_QT128 = "QT128C2X";

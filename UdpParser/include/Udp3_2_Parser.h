@@ -94,14 +94,11 @@ class Udp3_2_Parser : public GeneralParser {
    */
   virtual double GetFiretimesCorrection(int laserId, double speed, int loopIndex);
 
-  // 需通过函数初始化：LoadFiretimesString
+  // To be initialized by func 'LoadFiretimesString'
   std::array<std::array<float, HS_LIDAR_QT128_LASER_NUM>, HS_LIDAR_QT128_LOOP_NUM> m_vQT128Firetime;
-  // 需通过函数初始化：LoadChannelConfigString
+  // To be initialized by func 'LoadChannelConfigString'
   PandarQTChannelConfig m_PandarQTChannelConfig;
   
-  std::array<float, HS_LIDAR_QT128_AZIMUTH_SIZE> sin_map;
-  std::array<float, HS_LIDAR_QT128_AZIMUTH_SIZE> cos_map;
-
   // Only for QT128 and etc，not for AT128
   std::vector<double> m_vFiretimeCorrection;
 };

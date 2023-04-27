@@ -19,10 +19,7 @@
 #include <iostream>
 #include "Udp1_4_Parser.h"
 
-Udp1_4_Parser::Udp1_4_Parser() {
-  m_iMotorSpeed = 0;
-  m_iReturnMode = 0;
-}
+Udp1_4_Parser::Udp1_4_Parser() {}
 
 Udp1_4_Parser::~Udp1_4_Parser() { 
   // printf("release general parser\n"); 
@@ -105,7 +102,9 @@ dwStatus Udp1_4_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
   output->nPoints = m_nBlockNum * m_nLaserNum;
   // TODO scanComplete必须要有true状态，否则崩
   output->scanComplete = false;
-  output->sensorTimestamp = GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
+  // Error, not the same
+  // output->sensorTimestamp = GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
+  output->sensorTimestamp = this->GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
 
   int index = 0;
   float minAzimuth = -361;
@@ -113,7 +112,7 @@ dwStatus Udp1_4_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
   for (int blockID = 0; blockID < m_nBlockNum; blockID++) {
     // point to channel unit addr
     if (pHeader->HasConfidenceLevel()) {
-      printf("NNOOOONNNNONON HasConfidenceLevel");
+      printf("Not supported! HasConfidenceLevel");
     } else {
       const HS_LIDAR_BODY_CHN_UNIT_NO_CONF_ME_V4 *pChnUnitNoConf =
           reinterpret_cast<const HS_LIDAR_BODY_CHN_UNIT_NO_CONF_ME_V4 *>(

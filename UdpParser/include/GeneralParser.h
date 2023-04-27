@@ -65,7 +65,7 @@ class GeneralParser {
    * @param[out] pointXYZI Decoded coordinates of points
    * @param[out] pointRTHI Decoded coordinates of points
   */
-  dwStatus ComputeDwPoint(dwLidarPointXYZI& pointXYZI, dwLidarPointRTHI& pointRTHI, double radius, int32_t elevation, int32_t azimuth, uint8_t intensity);
+  virtual dwStatus ComputeDwPoint(dwLidarPointXYZI& pointXYZI, dwLidarPointRTHI& pointRTHI, double radius, int32_t elevation, int32_t azimuth, uint8_t intensity);
 
   /**
    * @brief Decode the correction bytes that controls the sequence of laser emitting, Only for QT128 
@@ -177,8 +177,8 @@ class GeneralParser {
   // unit of aziumth/elevation from correction file
   int m_iAziCorrUnit = 1000;
 
-  int m_iReturnMode;
-  int m_iMotorSpeed;
+  int m_iReturnMode = 0;
+  int m_iMotorSpeed = 0;
 
   static const std::string kLidarIPAddr;
   static const uint16_t kTcpPort = 9347;

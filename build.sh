@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# Attention! your need to link your Plugin
 sudo ln -s /path/to/where/download/HesaiLidar_DriveWorks_Plugin plugin_lidar_hesai
 
 # Drivework platform must be installed at first in /usr/local/*

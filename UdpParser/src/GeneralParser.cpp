@@ -22,8 +22,6 @@
 const std::string GeneralParser::kLidarIPAddr("192.168.1.201");
 
 GeneralParser::GeneralParser() {
-  m_iMotorSpeed = 0;
-  m_iReturnMode = 0;
   for(int i = 0; i < CIRCLE; ++i) {
       m_fSinAllAngle[i] = std::sin(2 * M_PI * i / CIRCLE);
       m_fCosAllAngle[i] = std::cos(2 * M_PI * i / CIRCLE);
@@ -192,7 +190,7 @@ dwStatus GeneralParser::ComputeDwPoint(dwLidarPointXYZI& pointXYZI, dwLidarPoint
   pointXYZI.x = xyDistance * this->m_fSinAllAngle[azimuth];
   pointXYZI.y = xyDistance * this->m_fCosAllAngle[azimuth];
   pointXYZI.z = radius * this->m_fSinAllAngle[elevation];
-  pointXYZI.intensity = intensity;
+  pointXYZI.intensity = intensity;  // float type 0-1 /255.0f
 
   pointRTHI.radius = radius;
   // 100 is the unit!!

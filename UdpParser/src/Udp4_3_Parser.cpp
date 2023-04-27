@@ -205,7 +205,8 @@ dwStatus Udp4_3_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
   // 不填则仅显示很小一部分点云
   output->scanComplete = false;
   // 不填可以播放，只是显示的时间戳不对
-  output->sensorTimestamp = pTail->GetMicroLidarTimeU64();
+  // output->sensorTimestamp = pTail->GetMicroLidarTimeU64();
+  output->sensorTimestamp = this->GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
   int index = 0;
   float minAzimuth = 0;
   float maxAzimuth = 0;

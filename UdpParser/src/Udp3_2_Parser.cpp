@@ -1,19 +1,25 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright [2022] [Hesai Technology Co., Ltd] 
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
 #include <sstream>
 #include "Udp3_2_Parser.h"
-// #include <thread>
-// #include <chrono>
 
-Udp3_2_Parser::Udp3_2_Parser() {
-  // printf("Udp3_2_Parser: creating \n");
-  m_iMotorSpeed = 0;
-  m_iReturnMode = 0;
-
-  for (int i = 0; i < HS_LIDAR_QT128_AZIMUTH_SIZE; ++i) {
-      // 360度对应 2* M_PI, 角度细分0.001 = 1/1000
-      sin_map[i] = std::sin(i * 2 * M_PI / HS_LIDAR_QT128_AZIMUTH_SIZE);
-      cos_map[i] = std::cos(i * 2 * M_PI / HS_LIDAR_QT128_AZIMUTH_SIZE);
-  }
-}
+Udp3_2_Parser::Udp3_2_Parser() {}
 
 Udp3_2_Parser::~Udp3_2_Parser() { 
   // printf("release Udp3_2_Parser\n"); 
@@ -59,7 +65,9 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
   output->nPoints = pHeader->GetBlockNum() * pHeader->GetLaserNum();
   // scanComplete必须要有true状态，否则崩
   output->scanComplete = false;
-  output->sensorTimestamp = GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
+  // output->sensorTimestamp = GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
+  // output->sensorTimestamp = pTail->GetTimestamp();
+  output->sensorTimestamp = this->GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
 
   const HS_LIDAR_BODY_AZIMUTH_QT_V2 *pAzimuth = reinterpret_cast<const HS_LIDAR_BODY_AZIMUTH_QT_V2 *>(
           (const unsigned char *)pHeader + sizeof(HS_LIDAR_HEADER_QT_V2));
@@ -112,16 +120,7 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
       elevationCorr = (HS_LIDAR_QT128_AZIMUTH_SIZE + elevationCorr) % HS_LIDAR_QT128_AZIMUTH_SIZE;
       azimuthCorr = (HS_LIDAR_QT128_AZIMUTH_SIZE + azimuthCorr) % HS_LIDAR_QT128_AZIMUTH_SIZE;
       // printf("azimuthCorr: %d, elevationCorr: %d \n", azimuthCorr, elevationCorr);
-      float xyDistance = distance * cos_map[elevationCorr];
-      pointXYZI[index].x = xyDistance * sin_map[azimuthCorr];
-      pointXYZI[index].y = xyDistance * cos_map[azimuthCorr];
-      pointXYZI[index].z = distance * sin_map[elevationCorr];
-      pointXYZI[index].intensity = static_cast<float>(u8Intensity / 255.0f);  // float type 0-1
-
-      pointRTHI[index].radius = distance;
-      pointRTHI[index].theta = azimuthCorr / 1000 / 180 * M_PI;
-      pointRTHI[index].phi = elevationCorr / 1000 / 180 * M_PI;
-      pointRTHI[index].intensity = static_cast<float>(u8Intensity / 255.0f);
+      this->ComputeDwPoint(pointXYZI[index], pointRTHI[index], distance, elevationCorr, azimuthCorr, u8Intensity);
       ++ index;
       // PrintDwPoint(&pointRTHI[index]);
       // PrintDwPoint(&pointXYZI[index]);

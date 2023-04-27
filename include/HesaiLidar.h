@@ -26,7 +26,7 @@
 #include <BufferPool.hpp>
 #include <ByteQueue.hpp>
 
-#include "tcp_command_client.h"
+#include "TcpCommandClient.h"
 #include "GeneralParser.h"
 #include "InputSocket.h"
 

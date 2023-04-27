@@ -38,7 +38,7 @@
 #include <sys/ioctl.h>
 
 #include "util.h"
-#include "tcp_command_client.h"
+#include "TcpCommandClient.h"
 
 typedef struct TcpCommandClient_s {
   pthread_mutex_t lock;
@@ -213,101 +213,6 @@ static PTC_ErrCode tcpCommandClientSendCmdWithoutSecurity(TcpCommandClient* clie
   pthread_mutex_unlock(&client->lock);
   return PTC_ERROR_NO_ERROR;
 }
-
-// static PTC_ErrCode tcpCommandClientSendCmdWithSecurity(TcpCommandClient *client , TC_Command *cmd) {
-// 	if(!client || !cmd) {
-// 		printf("Bad Parameter\n");
-// 		return PTC_ERROR_BAD_PARAMETER;
-// 	}
-
-// 	if(cmd->header.len != 0 && cmd->data == NULL) {
-// 		printf("Bad Parameter : payload is null\n");
-// 		return PTC_ERROR_BAD_PARAMETER;
-// 	}
-// 	pthread_mutex_lock(&client->lock);
-// 	int err_code = PTC_ERROR_NO_ERROR;
-
-// 	SSL_CTX* ctx = initial_client_ssl(certFile, privateKeyFile, caFile);
-// 	if(ctx == NULL) {
-//     printf("%s:%d, create SSL_CTX failed\n", __func__, __LINE__);
-// 		// ERR_print_errors_fp(stderr);
-// 		return PTC_ERROR_CONNECT_SERVER_FAILED;
-// 	}
-
-// 	int fd = tcp_open(client->ip , client->port);
-// 	if(fd < 0) {
-// 		printf("Connect to Server Failed!~!~\n");
-// 		err_code = PTC_ERROR_CONNECT_SERVER_FAILED;
-// 		goto end;
-// 	}
-
-// 	SSL *ssl = SSL_new(ctx);
-// 	if (ssl == NULL) {
-// 		printf("%s:%d, create ssl failed\n", __func__, __LINE__);
-// 		err_code = PTC_ERROR_CONNECT_SERVER_FAILED;
-// 		goto end;
-// 	}
-
-// 	SSL_set_fd(ssl, fd);
-// 	if(SSL_connect(ssl) == 0) {
-// 		printf("%s:%d, connect ssl failed\n", __func__, __LINE__);
-// 		// ERR_print_errors_fp(stderr);
-// 		err_code = PTC_ERROR_CONNECT_SERVER_FAILED;
-// 		goto end;
-// 	}
-
-// 	if(SSL_get_verify_result(ssl) != X509_V_OK) {
-// 		printf("%s:%d, verify ssl failed\n", __func__, __LINE__);
-// 		// ERR_print_errors_fp(stderr);
-// 		err_code = PTC_ERROR_CONNECT_SERVER_FAILED;
-// 		goto end;
-// 	}
-
-// 	unsigned char buffer[128];
-// 	int size = TcpCommand_buildHeader(buffer , cmd);
-// 	// printf("cmd header to tx, size = %d: \n",size);
-// 	print_mem(buffer , size);
-// 	int ret = SSL_write(ssl , buffer , size);
-// 	if(ret != size) {
-// 		printf("Write header error, ret=%d, size=%d\n", ret, size);
-// 		err_code = PTC_ERROR_TRANSFER_FAILED;
-// 		goto end;
-// 	}
-
-// 	if(cmd->header.len > 0 && cmd->data) {		
-// 		printf(" cmd data to tx size = %d: \n", cmd->header.len);
-// 		print_mem(cmd->data , cmd->header.len);
-// 		ret = SSL_write(ssl, cmd->data , cmd->header.len);
-// 		if(ret != cmd->header.len) {
-// 			printf("Write Payload error\n");
-// 			err_code = PTC_ERROR_TRANSFER_FAILED;
-// 			goto end;
-// 		}
-// 	}
-
-// 	TC_Command feedBack;
-// 	ret = tcpCommandReadCommandBySSL(ssl, &feedBack);
-// 	if(ret != 0) {
-// 		printf("Receive feed back failed!!!\n");
-// 		err_code = PTC_ERROR_TRANSFER_FAILED;
-// 		goto end;
-// 	}
-// 	// printf("feed back : %d %d %d \n", cmd->ret_size , cmd->header.ret_code , cmd->header.cmd);
-
-// 	cmd->ret_data = feedBack.ret_data;
-// 	cmd->ret_size = feedBack.ret_size;
-// 	cmd->header.ret_code = feedBack.header.ret_code;
-// 	printf("certify finished,close ssl and fd now \n");
-
-// 	end:
-// 	if (ssl != NULL) SSL_shutdown(ssl);
-// 	if (fd > 0) close(fd);
-// 	if (ctx != NULL) {
-// 		SSL_CTX_free(ctx);
-// 		pthread_mutex_unlock(&client->lock);
-// 	}
-// 	return err_code;
-// }
 
 static PTC_ErrCode tcpCommandClient_SendCmd(TcpCommandClient *client, TC_Command *cmd) {
   if(CERTIFY_MODE_NONE == sslFlag) {

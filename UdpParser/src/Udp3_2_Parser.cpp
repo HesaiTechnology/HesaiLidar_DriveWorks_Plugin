@@ -134,9 +134,7 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
     if (i == 0) minAzimuth = azimuth;
     else maxAzimuth = azimuth;
   } // 外循环
-  PrintDwPoint(&pointXYZI[index-2]);
-  // auto diff = sizeof(pointXYZI)/sizeof(pointXYZI[0]);
-  // printf("shuliang =%d", index);
+  // PrintDwPoint(&pointXYZI[index-2]);
 
   // 因为只有两个block，下标0的那个block是首个，取下标最末的那个block
   output->maxHorizontalAngleRad = ((maxAzimuth) / 100.0f) / 180 * M_PI;

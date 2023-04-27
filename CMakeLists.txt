@@ -16,10 +16,10 @@ include_directories(
     ./UdpProtocol
 )
 set(SOURCES
-    at128decoder.cpp
+    HSSensorPlugin.cpp
     ./src/HesaiLidar.cpp
     ./src/InputSocket.cpp
-    ./src/tcp_command_client.c
+    ./src/TcpCommandClient.c
     ./src/util.c
     ./src/PlatUtils.cpp
     ./UdpParser/src/Udp1_4_Parser.cpp

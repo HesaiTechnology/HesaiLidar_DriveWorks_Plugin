@@ -6,29 +6,30 @@ Contained here is the HESAI Lidar AT128 Plugin for NVIDIA DRIVEWORKS 5.8. The pl
 an implementation of NVIDIA's interface for Custom Lidars, described here: 
 - https://developer.nvidia.com/docs/drive/driveworks/latest/nvsdk_dw_html/sensorplugins_lidarsensor.html
 
-The plugin itself consists of a bin directory, lib directory and a data directory
-to store the lidar recordings bin files
-hesai-nvidia-driveworks_plugin
+The plugin itself consists of the source codes folder to be built, and the released hesai library folder 'hesai-nvidia-driveworks_plugin' which can be used without compiling the source code.
 
 ## hesai-nvidia-driveworks_plugin
 
-Contained here is the scripts, dynamic library,and examples explain how to playing the real-time point cloud using the compiled hesai plugin.
+Contained here are the scripts, dynamic library,and examples explain how to playing the real-time point cloud using the compiled hesai plugin.
 
-For details please read README.md in this folder
+For details please read README.md in this folder.
 
 ## Environment and Dependencies
 
 ### System environment requirement: Linux + NVIDIA DriveWork SDK
 
-Ubuntu 18.04 - with nvidia driveworks SDK 4.0 installed. 
+Ubuntu 18.04 - with nvidia driveworks SDK 4.0 installed.
 
-Ubuntu 20.04 - with nvidia driveworks SDK 5.8 installed.  
+Ubuntu 20.04 - with nvidia driveworks SDK 5.8 installed.
+
+Make sure the samples provided by nvidia can be complied in your computer by following the procedures of
+- https://docs.nvidia.com/drive/drive-os-5.2.6.0L/drive-qsg-dz/download-run-sdkm/index.html#download-devzone
 
 ## Download and Build
 
-The plugin can not be built independently, because it requires several libraries built by the driveworks SDK.
+The plugin can not be built independently, because several nvidia driveworks SDK libraries are required as the prerequisite while compiling.
 
-The current methods is to build the lidar plugin while building the drivework sample. The drivework sample can be found at 
+The current methods is to build the lidar plugin when building the drivework sample. The drivework sample can be found at 
 - /usr/local/driveworks/samples/ 
 
 1. Make sure the sample can be built in your computer at first
@@ -61,7 +62,7 @@ The current methods is to build the lidar plugin while building the drivework sa
 
 To use the library compiled by yourself, you need to 
 
-1. Modify the name of the previous so at first. 
+1. Modify the name of the previous so at first
 
 - cd /path/to/download/this/folder/hesai-nvidia-driveworks_plugin/lib
 - mv libplugin_lidar_hesai_x86.so libplugin_lidar_hesai_x86_old.so

@@ -34,10 +34,22 @@ SESSION_ID=$1
 
 SENSOR_TYPE="CUSTOM_EX"
 
+# support hesai lidar AT128 only - "AT128E2X", QT128 - "QT128C2X", P128 "Pandar128E3X"
 LIDAR_TYPE="AT128E2X"
 
-# too long real path might cause trouble
-CORRECTION_FILE="../share/correction_at128.dat"
+# too long real path might cause trouble correction_at128.dat correction_p128.dat correction_qt128.dat
+if [ "${LIDAR_TYPE}" = "AT128E2X" ]
+then
+    CORRECTION_FILE="../share/correction_at128.dat"
+elif [ "${LIDAR_TYPE}" = "QT128C2X" ]
+then
+    CORRECTION_FILE="../share/correction_qt128.dat"
+elif [ "${LIDAR_TYPE}" == "Pandar128E3X" ]
+then
+    CORRECTION_FILE="../share/correction_p128.dat"
+else
+    echo "Wrong Lidar Type: ${LIDAR_TYPE}"
+fi
 
 LOG_LEVEL="WARN"
 SENSOR_UDP_PORT=2368

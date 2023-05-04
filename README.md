@@ -22,8 +22,11 @@ Ubuntu 18.04 - with nvidia driveworks SDK 4.0 installed.
 
 Ubuntu 20.04 - with nvidia driveworks SDK 5.8 installed.
 
-Make sure the samples provided by nvidia can be complied in your computer by following the procedures of
-- https://docs.nvidia.com/drive/drive-os-5.2.6.0L/drive-qsg-dz/download-run-sdkm/index.html#download-devzone
+Ensure you have DRIVEWORKS OS installed by NVIDIA SDK Manager in your PC or DRIVE system, also ensure the samples provided by nvidia can be complied in your PC
+
+Described here:
+https://docs.nvidia.com/drive/drive-os-5.2.6.0L/drive-qsg-dz/download-run-sdkm/index.html#download-devzone
+https://developer.nvidia.com/docs/drive/drive-os/6.0.5/public/drive-os-installation/index.html
 
 ## Download and Build
 
@@ -71,11 +74,29 @@ To use the library compiled by yourself, you need to
 
 - ln -s /usr/local/driveworks-5.8/samples/build-x86/src/sensors/lidar/plugin_lidar_hesai/libplugin_lidar_hesai.so libplugin_lidar_hesai_x86.so
 
-Notice that files contained in hesai-nvidia-driveworks_plugin/lib should not be update by developer.
+Notice that files contained in hesai-nvidia-driveworks_plugin/lib should not be update by developer outside hesai.
 
 ## Run
 
 Follow the instruction in the folder of hesai-nvidia-driveworks_plugin
+
+### Hesai Lidar AT128
+
+AT128 is an auto-grade hybrid solid-state lidar that has a ranging capability of 200 meters at 10% reflectivity, with effective ground detection range as far as 70 meters.
+
+![Alt text](./hesai-nvidia-driveworks_plugin/graphics/at128_screenshot.png?raw=true "AT128 Virtual sensor Image")
+
+### Hesai Lidar Pandar128
+
+Pandar128 is a high-performance 360-degree lidar featuring image-like resolution and long range.
+
+![Alt text](./hesai-nvidia-driveworks_plugin/graphics/p128_screenshot.png?raw=true "Pandar128 Virtual sensor Image")
+
+### Hesai Lidar QT128
+
+QT128 is an automotive-grade, short-range lidar, providing accurate visibility information to enhance object recognition.
+
+![Alt text](./hesai-nvidia-driveworks_plugin/graphics/qt128_screenshot.png?raw=true "QT128 Virtual sensor Image")
 
 ## Contact
 

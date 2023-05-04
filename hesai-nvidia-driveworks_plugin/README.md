@@ -1,4 +1,4 @@
-# HESAI Lidar AT128 Plugin for NVIDIA DRIVEWORKS 
+# HESAI Lidar Plugin Scripts for NVIDIA DRIVEWORKS 
 
 ## Overview
 Contained here is the HESAI Lidar AT128 Plugin for NVIDIA DRIVEWORKS 5.8. The plugin is 

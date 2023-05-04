@@ -64,7 +64,6 @@ dwStatus Udp1_4_Parser::GetDecoderConstants(_dwSensorLidarDecoder_constants* con
 
 dwStatus Udp1_4_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint8_t *buffer, const size_t length, \
                                   dwLidarPointXYZI* pointXYZI, dwLidarPointRTHI* pointRTHI) {
-  // return DW_FAILURE;
   if (buffer[0] != 0xEE || buffer[1] != 0xFF || length < 0) {
     printf("Udp1_4_Parser: ParserOnePacket, invalid packet %x %x\n", buffer[0], buffer[1]);
     return DW_FAILURE;
@@ -92,17 +91,15 @@ dwStatus Udp1_4_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
   output->duration = pTail->GetTimestamp() - 100000;
   output->hostTimestamp = 0;
   output->maxPoints = m_nBlockNum * m_nLaserNum;
-  // TODO from the correction file
   if (m_vEleCorrection.empty() == true) {
-    printf("ParserOnePacket: no calibration string loaded Error \n");
+    // printf("Udp1_4_Parser: ParserOnePacket, no calibration string loaded Error \n");
     return DW_FAILURE;
   }
   output->maxVerticalAngleRad = m_vEleCorrection[m_nLaserNum - 1] / 1000 / 180 * M_PI;
   output->minVerticalAngleRad = m_vEleCorrection[0] / 1000 / 180 * M_PI;
   output->nPoints = m_nBlockNum * m_nLaserNum;
-  // TODO scanComplete必须要有true状态，否则崩
+  // scanComplete must be filled or it cracks
   output->scanComplete = false;
-  // Error, not the same
   // output->sensorTimestamp = GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
   output->sensorTimestamp = this->GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
 

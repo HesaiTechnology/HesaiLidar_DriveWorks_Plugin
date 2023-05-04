@@ -56,7 +56,7 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
   output->maxPoints = pHeader->GetBlockNum() * pHeader->GetLaserNum();
   // 参数传入不影响，一个包中两block均为同一水平角下数据，垂直方位角相同, 1 234 = /1000 = 1.234角度
   if (m_vEleCorrection.empty() == true) {
-    printf("ParserOnePacket: no calibration string loaded Error \n");
+    // printf("Udp3_2_Parser: ParserOnePacket, no calibration string loaded Error \n");
     return DW_FAILURE;
   }
   output->maxVerticalAngleRad = m_vEleCorrection[pHeader->GetLaserNum() - 1] / 1000 / 180 * M_PI;

@@ -1,23 +1,26 @@
-/******************************************************************************
- * Copyright 2019 The Hesai Technology Co., Ltd Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *****************************************************************************/
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright [2022] [Hesai Technology Co., Ltd] 
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
 #include <dw/sensors/plugins/lidar/LidarDecoder.h>
 #include <dw/sensors/plugins/lidar/LidarPlugin.h>
 
 #include "HesaiLidar.h"
+#include "Version.h"
 
 using std::cout;
 using std::endl;
@@ -43,8 +46,8 @@ extern "C" {
 dwStatus _dwSensorPlugin_createHandle(dwSensorPluginSensorHandle_t* sensor, dwSensorPluginProperties* /*properties*/,
                                       const char* params, dwContextHandle_t ctx)
 {
-    cout << HS_LIDAR_PLUGIN_VERSION << endl;
     // cout << "_dwSensorPlugin_createHandle: " << endl;
+    cout << "HESAI LIDAR PLUGIN V" << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_TINY << endl;
     if (!sensor) {
         return DW_INVALID_ARGUMENT;
     }

@@ -31,8 +31,6 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
 {
   // printf("Udp3_2_Parser:ParserOnePacket, lens=%lu \n", length);
   // printf(" %x yes %x \n", buffer[0], buffer[1]);
-  // std::chrono::milliseconds dura(2000);
-  // std::this_thread::sleep_for(dura);
   if (length < 0 || buffer[0] != 0xEE || buffer[1] != 0xFF) {
     printf("Udp3_2_Parser: ParserOnePacket, invalid packet %x %x\n", buffer[0], buffer[1]);
     return DW_FAILURE;
@@ -47,23 +45,22 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
                           (pHeader->HasFunctionSafety() ? sizeof(HS_LIDAR_FUNCTION_SAFETY) : 0));
   // pTail->Print();
   m_u16SpinSpeed = pTail->m_u16MotorSpeed;
-  // 该参数，双回波QT128不存在？
-  m_bIsDualReturn = false;
-  // 从包头或者包尾获取
+  // dual return won't affect decoding, just the azimuth of two blocks are the same, more points
+  m_bIsDualReturn = pTail->IsDualReturn();
   output->duration = pTail->GetTimestamp() - 100000;
-  // 时间戳在调完此函数后外部输入
+  // from outside this func
   output->hostTimestamp = 0; 
   output->maxPoints = pHeader->GetBlockNum() * pHeader->GetLaserNum();
-  // 参数传入不影响，一个包中两block均为同一水平角下数据，垂直方位角相同, 1 234 = /1000 = 1.234角度
+  // !Attention m_vEleCorrection and m_vAziCorrection must be initialized by func LoadCorrectionString
   if (m_vEleCorrection.empty() == true) {
     // printf("Udp3_2_Parser: ParserOnePacket, no calibration string loaded Error \n");
     return DW_FAILURE;
   }
   output->maxVerticalAngleRad = m_vEleCorrection[pHeader->GetLaserNum() - 1] / 1000 / 180 * M_PI;
   output->minVerticalAngleRad = m_vEleCorrection[0] / 1000 / 180 * M_PI;
-  // 这三个参数引入后，空跑的会断开！！那么几秒？？？
+  // vital parameter to assign memory
   output->nPoints = pHeader->GetBlockNum() * pHeader->GetLaserNum();
-  // scanComplete必须要有true状态，否则崩
+  // scanComplete must set false, then true when one scan is completed
   output->scanComplete = false;
   // output->sensorTimestamp = GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
   // output->sensorTimestamp = pTail->GetTimestamp();
@@ -76,18 +73,17 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
           (const unsigned char *)pAzimuth + sizeof(HS_LIDAR_BODY_AZIMUTH_QT_V2));
   // pChnUnit->Print();
 
-  // 包的序号，跨越二重循环，一维包序号保存
+  // index of the packet, from block count * laser nums, 2*128
   int index = 0;
   float minAzimuth = -361;
   float maxAzimuth = 361;
-  // 二维数组循环，两个块，每个块里有128线，从每一线中获取多点数据
   unsigned int blocknum = pHeader->GetBlockNum();
   for (unsigned int i = 0; i < blocknum; i++) {
     uint32_t azimuth = pAzimuth->GetAzimuth();
-    // 一个方位角对应一个数据块
+    // azimuth corresponds to a block
     pChnUnit = reinterpret_cast<const HS_LIDAR_BODY_CHN_UNIT_QT_V2 *>(
                (const unsigned char *)pAzimuth + sizeof(HS_LIDAR_BODY_AZIMUTH_QT_V2));
-    // pAzimuth指针指向块的下一个方位角
+    // then pAzimuth points to next azimuth
     pAzimuth = reinterpret_cast<const HS_LIDAR_BODY_AZIMUTH_QT_V2 *>(
         (const unsigned char *)pAzimuth +
         sizeof(HS_LIDAR_BODY_AZIMUTH_QT_V2) +
@@ -103,7 +99,6 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
       uint32_t elevationCorr = 0;
       pChnUnit = pChnUnit + 1;
 
-      // ！m_vEleCorrection&m_vAziCorrection只有在LoadCorrectionString使用后才初始化
       if (m_vEleCorrection.size() >= j && m_vAziCorrection.size() >= j) {
         int laserId = j;
         if (pHeader->HasSelfDefine() && m_PandarQTChannelConfig.m_bIsChannelConfigObtained 
@@ -111,9 +106,10 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
             laserId = m_PandarQTChannelConfig.m_vChannelConfigTable[loopIndex][j] - 1;
         }
         elevationCorr = m_vEleCorrection[laserId];
-        // UDP包中角度仅两位小数 1 23 = 123度，统一到与角度文件三位小数点 123 0度，故*10
+        // azimuth unit from UDP packet is 100, e.g. 1.23 = 123.
+        // however, azimuth unit from correction file is 1000, e.g. 1.234 = 1234
         azimuthCorr = azimuth * 10 + m_vAziCorrection[laserId];
-        // if (m_bEnableFireTimeCorrection) { ////!!
+        // if (m_bEnableFireTimeCorrection) { ////!! TODO
         //     azimuthCorr += GetFiretimesCorrection(laserId, pTail->GetMotorSpeed(), loopIndex);
         // }
       }
@@ -124,18 +120,18 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
       ++ index;
       // PrintDwPoint(&pointRTHI[index]);
       // PrintDwPoint(&pointXYZI[index]);
-    } // 内循环
+    } // cycle laser channel
     
     if (IsNeedFrameSplit(azimuth)) {
       output->scanComplete = true;
     }
     m_u16LastAzimuth = azimuth;
+    // As only two block exist, the primary one is minimum
     if (i == 0) minAzimuth = azimuth;
     else maxAzimuth = azimuth;
-  } // 外循环
+  } // cycle block
   // PrintDwPoint(&pointXYZI[index-2]);
 
-  // 因为只有两个block，下标0的那个block是首个，取下标最末的那个block
   output->maxHorizontalAngleRad = ((maxAzimuth) / 100.0f) / 180 * M_PI;
   output->minHorizontalAngleRad = ((minAzimuth) / 100.0f) / 180 * M_PI;
   // !the display only rely on xyzi
@@ -148,30 +144,27 @@ dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
 
 dwStatus Udp3_2_Parser::GetDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
   // printf("GetDecoderConstants: \n");
-  // QT的一个包里1127个byte, 按1500, 雷达是单回波还是双回波，频率10Hz已确定 15000 150000 15000
+  // Each packet contains 1127 bytes for QT128, use 1500
   constants->maxPayloadSize = 1500;
-  // 每秒包数量，360/0.4*10 = 9000，如果是双回波的多出一倍*2  18000 36000 
-  // 发生std::bad_alloc 900000 450000 90000不行了， 原因怀疑是内存分配不够？
-  constants->properties.packetsPerSecond = 9000;
-  // 每秒点数量，9000 * 128 * 2 = 2304000, 该参数直接影响实时点云显示！
-  constants->properties.pointsPerSecond = 2304000;
-  // 10Hz 每秒转10圈
-  constants->properties.spinFrequency = 10;
+  // Packet nums per second，360/0.4*10 = 9000
+  // Vital - param to detect a gap in sensor timestamp
+  constants->properties.packetsPerSecond = 9000 / (m_bIsDualReturn ? 1 : 2);
+  // Vital - affect the display of live sensor, point nums per second: 9000 * 128 * 2 = 2304000
+  constants->properties.pointsPerSecond = 2304000 / (m_bIsDualReturn ? 1 : 2);
+  constants->properties.spinFrequency = m_u16SpinSpeed / 60.0f;
 
-  constants->properties.packetsPerSpin = 900;
+  // constants->properties.packetsPerSpin = 900;
+  // constants->properties.pointsPerSpin = 230400;
   constants->properties.pointsPerPacket = 256;
-  
-  constants->properties.pointsPerSpin = 230400;
   constants->properties.pointStride = 8;
-  // 支持关调一些激光器，动态检查FOV， 如果用户关了一些FOV
+  // TODO support qt lidar closes some laser channel, namely dynamic FOV
   constants->properties.horizontalFOVStart = deg2Rad(0);
   constants->properties.horizontalFOVEnd = deg2Rad(360);
-  // QT有可能40 128 64， 从UDP包获得，以为128线，仅40， 参数传入尽量对
+  // TODO QT can use customized channels 40 128 64
   constants->properties.numberOfRows = 128;
-  // 说明书上-52.6，实际校正文件中的有差别， 角度文件第一个，和最后一个
+  // From the correction file, the first and last
   constants->properties.verticalFOVStart = deg2Rad(-52.6);
   constants->properties.verticalFOVEnd = deg2Rad(52.6);
-  // 我们的只有128线，256这个数组大小
   for (int i = 0; i < 128; i++) {
       if(m_bGetCorrectionFile == true && m_vEleCorrection.empty() == false) {
           constants->properties.verticalAngles[i] = deg2Rad(m_vEleCorrection[i] / HS_LIDAR_QT128_AZIMUTH_UNIT);

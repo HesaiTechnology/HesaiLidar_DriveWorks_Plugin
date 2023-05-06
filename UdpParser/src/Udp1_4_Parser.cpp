@@ -27,30 +27,30 @@ Udp1_4_Parser::~Udp1_4_Parser() {
 
 dwStatus Udp1_4_Parser::GetDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
     // printf("GetDecoderConstants: \n");
-    // Each packet contains QT的一个包里1127个byte, 按1500, 雷达是单回波还是双回波，频率10Hz已确定 15000 150000 15000
+    // Each packet contains 893 bytes for each Pandar128 UDP, some sort of Pandar serial can be 1409
     constants->maxPayloadSize = 1500;
-    // 每秒包数量，360/0.4*10 = 9000，如果是双回波的多出一倍*2  18000 36000 
+    // Packet nums per second, send one packet per 0.1 second for Pandar128. 360/0.1*10 = 36000
+    // Dual return means two block in one packet have the same timestamp
     // !std::bad_alloc happens if value is too small, narrow memory 900000 450000 ok, but 90000 fails? 
-    constants->properties.packetsPerSecond = 9000;
-    // !Influence the display of point cloud, 9000 * 128 * 2 = 2304000
-    constants->properties.pointsPerSecond = 23040000;
-    // 10Hz 10 circle per second
-    constants->properties.spinFrequency = 10;
-    // 900 9000 90000
-    constants->properties.packetsPerSpin = 900;
-    // 256 
+    // !Fault parameter to avoid dw printing packet dropping 12
+    constants->properties.packetsPerSecond = 72000 / (m_bIsDualReturn ? 1 : 2);
+    // !Influence the display of point cloud, 72000 * 128 * 2 = 2304000
+    constants->properties.pointsPerSecond = 18432000 / (m_bIsDualReturn ? 1 : 2);
+    // 10Hz 10 circle per second, 20Hz the numbers of packets halve
+    constants->properties.spinFrequency = m_u16SpinSpeed / 60.0f;
+    // Will be override by dw, depends on the packets received in practice
+    // constants->properties.packetsPerSpin = 900;
+    // constants->properties.pointsPerSpin = 230400;
+    // 256 = blockNum * laserNum = 2 * 256
     constants->properties.pointsPerPacket = 256;
     
-    constants->properties.pointsPerSpin = 230400;
     constants->properties.pointStride = 8;
     constants->properties.horizontalFOVStart = deg2Rad(0);
     constants->properties.horizontalFOVEnd = deg2Rad(360);
-    // QT有可能40 128 64， 从UDP包获得，以为128线，仅40， 参数传入尽量对
     constants->properties.numberOfRows = m_nLaserNum;
-    // 说明书上??，实际校正文件中的有差别， 角度文件第一个，和最后一个
+    // From Pandar128 manual or correction file to take the first and last value
     constants->properties.verticalFOVStart = deg2Rad(-14);
     constants->properties.verticalFOVEnd = deg2Rad(26);
-    // 我们的只有128线，256这个数组大小
     for (int i = 0; i < m_nLaserNum; i++) {
         if(m_bGetCorrectionFile == true && m_vEleCorrection.empty() == false) {
             constants->properties.verticalAngles[i] = deg2Rad(m_vEleCorrection[i] / m_iAziCorrUnit);
@@ -87,8 +87,8 @@ dwStatus Udp1_4_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
       (pHeader->HasFuncSafety() ? sizeof(HS_LIDAR_FUNC_SAFETY_ME_V4) : 0));
   // pTail->Print();
   m_u16SpinSpeed = pTail->m_u16MotorSpeed;
-  m_bIsDualReturn = false;
-  output->duration = pTail->GetTimestamp() - 100000;
+  m_bIsDualReturn = pTail->IsDualReturn();
+  output->duration =  pTail->GetMicroLidarTimeU64() - 100000;
   output->hostTimestamp = 0;
   output->maxPoints = m_nBlockNum * m_nLaserNum;
   if (m_vEleCorrection.empty() == true) {

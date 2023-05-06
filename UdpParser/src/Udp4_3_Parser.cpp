@@ -142,28 +142,30 @@ int Udp4_3_Parser::ParseCorrectionString(char *correction_string) {
 }
 
 dwStatus Udp4_3_Parser::GetDecoderConstants(_dwSensorLidarDecoder_constants* constants) {
-  // 必传-异常退出, 填10太小直接崩溃 500会崩，800还可以？ 1118AT一个包里byte数
+  // Vital - crackdown if too small (10), memory mass consumption if too large.
+  // For AT128 1118 byte for each packet
   constants->maxPayloadSize = 1500;
-  // 必传-virtual会进入loading黑屏卡死, 过大多加2个0，显示界面错位！加4个0则直接退出 12500
-  // Fault parameter to avoid dw printing packet dropping
+  // Vital - virtual sensor mode will enter blackscreen, loading
+  // Too large causes accidental terminate (+0000) or dislocation on displaying (+00)
+  // !Fault parameter to avoid dw printing packet dropping
   constants->properties.packetsPerSecond = 12 / (m_bIsDualReturn ? 1 : 2);
-  // 无影响
-  constants->properties.packetsPerSpin = 1250 * m_u16SpinSpeed / 2000.0f / (m_bIsDualReturn ? 1 : 2);
-  constants->properties.pointsPerPacket = 256;
-  // 重要，异常退出，过大加2个0界面小卡一下
+  // Vital - exception occurs or ui stucks, if too large
   constants->properties.pointsPerSecond = 3200000 / (m_bIsDualReturn ? 1 : 2);
-  // 无影响
+  // No effect
+  constants->properties.packetsPerSpin = 1250 * m_u16SpinSpeed / 2000.0f / (m_bIsDualReturn ? 1 : 2);
+  // No effect
   constants->properties.pointsPerSpin = 320000 * m_u16SpinSpeed / 2000.0f / (m_bIsDualReturn ? 1 : 2);
+  constants->properties.pointsPerPacket = 256;
   constants->properties.pointStride = 4;
-  // 必传-不传界面空的
+  // Vital - or no display
   constants->properties.spinFrequency = m_u16SpinSpeed / 200.0f;
-  // 无影响-垂直水平FOV
+  // No effect - Vectical FOV
   constants->properties.horizontalFOVEnd = 2.8;
   constants->properties.horizontalFOVStart = 0.5;
   constants->properties.numberOfRows = 128;
   constants->properties.verticalFOVEnd = 0.224673;
   constants->properties.verticalFOVStart = -0.216697;
-  // 不传无影响
+  // No effect if no assignment
   // printLidarProperty(&constants->properties);
   for (int i = 0; i < 128; i++) {
       if(m_bGetCorrectionFile)
@@ -192,20 +194,20 @@ dwStatus Udp4_3_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
           sizeof(HS_LIDAR_BODY_CRC_ST_V3));
   m_u16SpinSpeed = pTail->m_i16MotorSpeed;
   m_bIsDualReturn = pTail->IsDualReturn();
-  // 无用参数
+  // seem have no effect on the display
   output->duration = pTail->GetMicroLidarTimeU64() - 100000; 
-  // 在函数外已赋值，置为0也没用
+  // fill value outside this function
   output->hostTimestamp = 0;
-  // 如下三条：max min这样的参数一点用都没有
+  // seem have no effect on the display
   output->maxPoints = pHeader->GetBlockNum() * pHeader->GetLaserNum();
   output->maxVerticalAngleRad = m_PandarAT_corrections.l.elevation[pHeader->GetLaserNum() - 1] /180 * M_PI/ 25600.0f;
   output->minVerticalAngleRad = m_PandarAT_corrections.l.elevation[0] /180 * M_PI/ 25600.0f;
-  // 不填直接崩调，=0界面一个点也没有
+  // vital parameter to assign memory for dw, no point exsits if equals to zero, program crack if no assignment
   output->nPoints = pHeader->GetBlockNum() * pHeader->GetLaserNum();
-  // 不填则仅显示很小一部分点云
+  // vital parameter showing one frame
   output->scanComplete = false;
-  // 不填可以播放，只是显示的时间戳不对
-  // output->sensorTimestamp = pTail->GetMicroLidarTimeU64();
+  // the sensorTimestamp will be show in the replay tool UI, prove to be correct
+  // It is normal if sensorTimestamp differs from timestamp of PC, because some lidar timestamp needs to be corrected manauly by PTP
   output->sensorTimestamp = this->GetMicroLidarTimeU64(pTail->m_u8UTC, 6, pTail->GetTimestamp());
   int index = 0;
   float minAzimuth = 0;

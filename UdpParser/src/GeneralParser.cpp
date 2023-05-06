@@ -33,7 +33,7 @@ GeneralParser::~GeneralParser() {
 }
 
 int GeneralParser::LoadCorrectionFile(std::string correction_path) {
-  printf("GeneralParser: load correction file, path=%s \n", correction_path.c_str());
+  // printf("GeneralParser: load correction file, path=%s \n", correction_path.c_str());
   std::ifstream fin(correction_path);
   if (fin.is_open() == false) {
     printf("Open correction file Error, path=%s\n", correction_path.c_str());

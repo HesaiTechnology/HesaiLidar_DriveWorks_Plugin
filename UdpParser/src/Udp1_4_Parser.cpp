@@ -33,7 +33,7 @@ dwStatus Udp1_4_Parser::GetDecoderConstants(_dwSensorLidarDecoder_constants* con
     // Dual return means two block in one packet have the same timestamp
     // !std::bad_alloc happens if value is too small, narrow memory 900000 450000 ok, but 90000 fails? 
     // !Fault parameter to avoid dw printing packet dropping 12
-    constants->properties.packetsPerSecond = 72000 / (m_bIsDualReturn ? 1 : 2);
+    constants->properties.packetsPerSecond = 3600 / (m_bIsDualReturn ? 1 : 2);
     // !Influence the display of point cloud, 72000 * 128 * 2 = 2304000
     constants->properties.pointsPerSecond = 18432000 / (m_bIsDualReturn ? 1 : 2);
     // 10Hz 10 circle per second, 20Hz the numbers of packets halve

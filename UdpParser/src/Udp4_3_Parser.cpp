@@ -299,7 +299,7 @@ dwStatus Udp4_3_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint
     
   }
 
-  // Will not influence the display
+  // No influence on the display
   output->maxHorizontalAngleRad = (maxAzimuth / 25600.0f) / 180 * M_PI;
   output->minHorizontalAngleRad = (minAzimuth / 25600.0f) / 180 * M_PI;
   // Display program show black screen if no incoming points

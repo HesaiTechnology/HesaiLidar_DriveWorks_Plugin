@@ -31,9 +31,9 @@ DATA_DIR="$( cd "${SCRIPT_DIR}/../data" &> /dev/null && pwd )"
 ARCH=$( dpkg --print-architecture )
 
 if [ "${ARCH}" = "amd64" ]; then
-    PLUGIN_FILE="libplugin_lidar_hesai_x86.so"
+    PLUGIN_FILE="libplugin_lidar_hesai_x86_64.so"
 else
-    PLUGIN_FILE="libplugin_lidar_hesai_arm.so"
+    PLUGIN_FILE="libplugin_lidar_hesai_aarch64.so"
 fi
 
 PLUGIN_PATH="${PLUGIN_DIR}/${PLUGIN_FILE}"
@@ -44,7 +44,7 @@ SESSION_ID=$1
 # must be CUSTOM_EX or recording program elapses
 SENSOR_TYPE="CUSTOM_EX"
 
-# 'AT128E2X' for AT128
+# support hesai lidar AT128 - "AT128E2X", QT128 - "QT128C2X", P128 - "Pandar128E3X"
 LIDAR_TYPE="AT128E2X"
 
 # set your host and sensor ip/hostname and ports here

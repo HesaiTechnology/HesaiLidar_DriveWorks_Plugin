@@ -20,9 +20,9 @@ PLUGIN_DIR="$( cd "${SCRIPT_DIR}/../lib" &> /dev/null && pwd )"
 ARCH=$( dpkg --print-architecture )
 
 if [ "${ARCH}" = "amd64" ]; then
-    PLUGIN_FILE="libplugin_lidar_hesai_x86.so"
+    PLUGIN_FILE="libplugin_lidar_hesai_x86_64.so"
 else
-    PLUGIN_FILE="libplugin_lidar_hesai_arm.so"
+    PLUGIN_FILE="libplugin_lidar_hesai_aarch64.so"
 fi
 
 PLUGIN_PATH="${PLUGIN_DIR}/${PLUGIN_FILE}"
@@ -34,7 +34,19 @@ SENSOR_TYPE="CUSTOM_EX"
 LIDAR_TYPE="AT128E2X"
 
 # Set path of your correction file, loading local correction file would start if no file from lidar was found
-CORRECTION_FILE="../share/correction_at128.dat"
+if [ "${LIDAR_TYPE}" = "AT128E2X" ]
+then
+    CORRECTION_FILE="../share/correction_at128.dat"
+elif [ "${LIDAR_TYPE}" = "QT128C2X" ]
+then
+    CORRECTION_FILE="../share/correction_qt128.dat"
+elif [ "${LIDAR_TYPE}" = "Pandar128E3X" ]
+then
+    CORRECTION_FILE="../share/correction_p128.dat"
+else
+    echo "Wrong Lidar Type: ${LIDAR_TYPE}"
+    CORRECTION_FILE=""
+fi
 
 # Set your host and sensor ip/hostname and ports here
 SENSOR_ADDR=$1
@@ -42,7 +54,7 @@ SENSOR_UDP_PORT=2368
 SENSOR_PTC_PORT=9347
 
 # Set your multicast IP address of connected Lidar, optional, e.g. "239.0.0.1"
-MULTCAST_IP="239.0.0.1"
+MULTCAST_IP=""
 HOST_ADDR=$2
 LOG_LEVEL="WARN"
 

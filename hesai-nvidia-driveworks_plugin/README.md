@@ -118,10 +118,18 @@ With `log_level` set to `WARN`, sufficient output to the console should happen t
 
 ## Simulate live sensor
 
-You can replay the pcap file to simulate the live sensor, and then use our scripts to play, record, and run recording.
-A feasible UDP pacakge sender can be created by Python with the following link:
-https://gist.github.com/ninedraft/7c47282f8b53ac015c1e326fffb664b5
+For those who doesn't have a real hesai sensor, you can replay the pcap file to simulate the live sensor, and then use our scripts to play, record, and run recording.
 
-Make sure `python` and `scapy`are installed in your computer.
+However, simulating live sensor is not part of the major function demanded by driveworks plugin. It might cause some unknown errors, like the display of point cloud slow down. We recommend you to use a real hesai sensor.
 
-@note differ from live sensor, the program ends when replaying the pcap file comes to end.
+Make sure `python3` and `scapy`are installed in your computer.
+
+1. Modify the filename of pcap file to be played in script `send_pcap.py`
+
+2. Run `python3 send_pcap.py` to play the pcap file
+
+3. Modify the lidar type in script `run.sh`
+
+4. Run `run.sh`
+
+@note differ from live sensor, the program ends or terminates when replaying the pcap file comes to end.

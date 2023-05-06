@@ -146,11 +146,11 @@ dwStatus Udp3_2_Parser::GetDecoderConstants(_dwSensorLidarDecoder_constants* con
   // printf("GetDecoderConstants: \n");
   // Each packet contains 1127 bytes for QT128, use 1500
   constants->maxPayloadSize = 1500;
-  // Packet nums per second，360/0.4 = 900
-  // Vital - param to detect a gap in sensor timestamp
-  constants->properties.packetsPerSecond = 900 / (m_bIsDualReturn ? 1 : 2);
-  // Vital - affect the display of live sensor, point nums per second: 900 * 128 * 2 = 230400
-  constants->properties.pointsPerSecond = 230400 / (m_bIsDualReturn ? 1 : 2);
+  // Packet nums per scan，360/0.4 = 900, 900*10=9000 per second 10Hz
+  // Vital - param to detect a gap in sensor timestamp, No need to use 12 to avoid incorrect warning
+  constants->properties.packetsPerSecond = 9000 / (m_bIsDualReturn ? 1 : 2);
+  // Vital - affect the display of live sensor, point nums per second: 9000 * 128 * 2 = 230400
+  constants->properties.pointsPerSecond = 2304000 / (m_bIsDualReturn ? 1 : 2);
   constants->properties.spinFrequency = m_u16SpinSpeed / 60.0f;
 
   // constants->properties.packetsPerSpin = 900;

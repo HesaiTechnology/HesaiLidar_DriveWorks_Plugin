@@ -35,31 +35,66 @@ The plugin can not be built independently, because several nvidia driveworks SDK
 The current methods is to build the lidar plugin when building the drivework sample. The drivework sample can be found at 
 - /usr/local/driveworks/samples/ 
 
-1. Make sure the sample can be built in your computer at first
+1. Make sure the sample can be built in your computer primarily
 
 2. Create a soft link to this plugin folder
 
-- sudo ln -s /path/to/where/downloaded/HesaiLidar_DriveWorks_Plugin plugin_lidar_hesai
+```
+sudo ln -s /path/to/where/download/HesaiLidar_DriveWorks_Plugin plugin_lidar_hesai
+```
 
 3. Add the modular cmake command to the upper CMakeLists.txt, namely the following sentence
 
-- add_subdirectory(plugin_lidar_hesai)
+```
+add_subdirectory(plugin_lidar_hesai)
+```
 
-4. Create build folder
+### Compile for PC x86
 
-- cd /usr/local/driveworks/samples/
-- mkdir build-x86
-- cd build-x86
+The program can be developed and tested on the PC, and then run on the autonomous driving hardware NVIDIA DRIVE Orin through cross compiling. 
 
-5. Configure and make
+- Create build folder
+```
+cd /usr/local/driveworks/samples/
+mkdir build-x86
+cd build-x86
+```
 
-- cmake ../
-- make -j
+- Configure and make
+```
+cmake ../
+make -j
+```
 
-6. Find the customized hesai library
+- Find the customized hesai library
+```
+cd /usr/local/driveworks/samples/build-x86/src/sensors/lidar/plugin_lidar_hesai
+ls
+```
 
-- cd /usr/local/driveworks/samples/build-x86/src/sensors/lidar/plugin_lidar_hesai
-- ls
+### Cross Compile for NVIDIA DRIVE Orin
+
+NVIDIA DRIVE Orin is based on the architecture of Linux Aarch64. 
+
+- Create build folder
+```
+cd /usr/local/driveworks/samples/
+mkdir build-linux-aarch64
+cd build-linux-aarch64
+```
+
+- Configure and make
+
+```sudo cmake -DCMAKE_TOOLCHAIN_FILE=/usr/local/driveworks/samples/cmake/Toolchain-V5L.cmake     -DVIBRANTE_PDK=/home/hesai/nvidia/nvidia_sdk/DRIVE_OS_6.0.5_SDK_Linux_DRIVE_AGX_ORIN_DEVKITS/DRIVEOS/drive-linux     -S /usr/local/driveworks/samples```
+
+```sudo make -j```
+
+- Find the customized hesai library
+
+```
+cd /usr/local/driveworks/samples/build-linux-aarch64/src/sensors/lidar/plugin_lidar_hesai
+ls
+```
 
 ## Configuration
 
@@ -67,12 +102,16 @@ To use the library compiled by yourself, you need to
 
 1. Modify the name of the previous so at first
 
-- cd /path/to/download/this/folder/hesai-nvidia-driveworks_plugin/lib
-- mv libplugin_lidar_hesai_x86.so libplugin_lidar_hesai_x86_old.so
+```
+cd /path/to/download/this/folder/hesai-nvidia-driveworks_plugin/lib
+mv libplugin_lidar_hesai_x86.so libplugin_lidar_hesai_x86_old.so
+```
 
 2. Create a new soft link to your so file
 
-- ln -s /usr/local/driveworks-5.8/samples/build-x86/src/sensors/lidar/plugin_lidar_hesai/libplugin_lidar_hesai.so libplugin_lidar_hesai_x86.so
+```
+ln -s /usr/local/driveworks-5.8/samples/build-x86/src/sensors/lidar/plugin_lidar_hesai/libplugin_lidar_hesai.so libplugin_lidar_hesai_x86.so
+```
 
 Notice that files contained in hesai-nvidia-driveworks_plugin/lib should not be update by developer outside hesai.
 
@@ -84,19 +123,19 @@ Follow the instruction in the folder of hesai-nvidia-driveworks_plugin
 
 AT128 is an auto-grade hybrid solid-state lidar that has a ranging capability of 200 meters at 10% reflectivity, with effective ground detection range as far as 70 meters.
 
-![Alt text](./hesai-nvidia-driveworks_plugin/graphics/at128_screenshot.png?raw=true "AT128 Virtual sensor Image")
+![Alt text](./hesai-nvidia-driveworks_plugin/screenshot/at128_screenshot.png?raw=true "AT128 Virtual sensor Image")
 
 ### Hesai Lidar Pandar128
 
 Pandar128 is a high-performance 360-degree lidar featuring image-like resolution and long range.
 
-![Alt text](./hesai-nvidia-driveworks_plugin/graphics/p128_screenshot.png?raw=true "Pandar128 Virtual sensor Image")
+![Alt text](./hesai-nvidia-driveworks_plugin/screenshot/p128_screenshot.png?raw=true "Pandar128 Virtual sensor Image")
 
 ### Hesai Lidar QT128
 
 QT128 is an automotive-grade, short-range lidar, providing accurate visibility information to enhance object recognition.
 
-![Alt text](./hesai-nvidia-driveworks_plugin/graphics/qt128_screenshot.png?raw=true "QT128 Virtual sensor Image")
+![Alt text](./hesai-nvidia-driveworks_plugin/screenshot/qt128_screenshot.png?raw=true "QT128 Virtual sensor Image")
 
 ## Contact
 

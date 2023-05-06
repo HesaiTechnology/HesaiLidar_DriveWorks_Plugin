@@ -29,13 +29,14 @@ dwStatus Udp1_4_Parser::GetDecoderConstants(_dwSensorLidarDecoder_constants* con
     // printf("GetDecoderConstants: \n");
     // Each packet contains 893 bytes for each Pandar128 UDP, some sort of Pandar serial can be 1409
     constants->maxPayloadSize = 1500;
-    // Packet nums per second, send one packet per 0.1 second for Pandar128. 360/0.1*10 = 36000
+    // Packet nums per second, send one packet per 0.1 degree for Pandar128. 360/0.1*10 = 36000, it takes 0.1s
     // Dual return means two block in one packet have the same timestamp
     // !std::bad_alloc happens if value is too small, narrow memory 900000 450000 ok, but 90000 fails? 
-    // !Fault parameter to avoid dw printing packet dropping 12
-    constants->properties.packetsPerSecond = 3600 / (m_bIsDualReturn ? 1 : 2);
-    // !Influence the display of point cloud, 72000 * 128 * 2 = 2304000
-    constants->properties.pointsPerSecond = 18432000 / (m_bIsDualReturn ? 1 : 2);
+    // !Fault parameter to avoid dw printing packet dropping 12, real value = 36000
+    constants->properties.packetsPerSecond = 12 / (m_bIsDualReturn ? 1 : 2);
+    // !Influence the display of point cloud, 36000 * 128 * 2 = 9216000
+    // Error occurs if normal size, DW_OUT_OF_BOUNDS: RenderEngine::Buffer too small for requested layout
+    constants->properties.pointsPerSecond = 9216000 / (m_bIsDualReturn ? 1 : 2);
     // 10Hz 10 circle per second, 20Hz the numbers of packets halve
     constants->properties.spinFrequency = m_u16SpinSpeed / 60.0f;
     // Will be override by dw, depends on the packets received in practice

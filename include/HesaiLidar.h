@@ -37,8 +37,6 @@ namespace plugins
 namespace lidar
 {
 
-#define HS_LIDAR_PLUGIN_VERSION "HESAI LIDAR PLUGIN V1.1.4"
-
 const std::string LIDAR_TYPE_AT128 = "AT128E2X";
 const std::string LIDAR_TYPE_QT128 = "QT128C2X";
 const std::string LIDAR_TYPE_P128 = "Pandar128E3X";

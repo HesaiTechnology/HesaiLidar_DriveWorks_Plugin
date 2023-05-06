@@ -81,19 +81,20 @@ dwStatus HesaiLidar::startSensor()
     if (loadLidarCorrection() != DW_SUCCESS) {
         std::cout << "startSensor: first loading calibration Error, try local file" << std::endl;
         if (m_Parser->LoadCorrectionFile(m_correctionFilePath) != 0) {
-            return DW_FAILURE;
+            // return DW_FAILURE;
         }
     }
 
     if (m_lidarType == LIDAR_TYPE_QT128) {
-        if(loadChannelConfig() != DW_SUCCESS) {
-            std::cout << "startSensor: QT128 loadChannelConfig Error" << std::endl;
-            // return DW_FAILURE;
-        }
-        if(loadFiretimes() != DW_SUCCESS) {
-            std::cout << "startSensor: QT128 loadFiretimes Error" << std::endl;
-            // return DW_FAILURE;
-        }
+        // TODO support channel config or firetime config
+        // if(loadChannelConfig() != DW_SUCCESS) {
+        //     std::cout << "startSensor: QT128 loadChannelConfig Error" << std::endl;
+        //     // return DW_FAILURE;
+        // }
+        // if(loadFiretimes() != DW_SUCCESS) {
+        //     std::cout << "startSensor: QT128 loadFiretimes Error" << std::endl;
+        //     // return DW_FAILURE;
+        // }
     }
 
     return DW_SUCCESS;

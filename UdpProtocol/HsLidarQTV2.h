@@ -138,7 +138,7 @@ struct HS_LIDAR_TAIL_QT_V2 {
   uint8_t m_u8WorkingMode;
   uint8_t m_u8ReturnMode;
   uint16_t m_u16MotorSpeed;
-  // 年月日 时分秒
+  // year month day hour minute second
   uint8_t m_u8UTC[6];
   uint32_t m_u32Timestamp;
   uint8_t m_u8FactoryInfo;

@@ -25,7 +25,6 @@ Udp3_2_Parser::~Udp3_2_Parser() {
   // printf("release Udp3_2_Parser\n"); 
 }
 
-
 dwStatus Udp3_2_Parser::ParserOnePacket(dwLidarDecodedPacket *output, const uint8_t *buffer, const size_t length, \
                                         dwLidarPointXYZI* pointXYZI, dwLidarPointRTHI* pointRTHI)
 {

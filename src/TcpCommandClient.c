@@ -219,18 +219,6 @@ static PTC_ErrCode tcpCommandClient_SendCmd(TcpCommandClient *client, TC_Command
     // printf("tcpCommandClient_SendCmd: Get data without certification now...\n");
     return tcpCommandClientSendCmdWithoutSecurity(client, cmd);
   }
-  // if(CERTIFY_MODE_SINGLE == sslFlag) {
-  //   printf("Get data with single certification now...\n");
-  //   return tcpCommandClientSendCmdWithSecurity(client, cmd);
-  // }
-  // if(CERTIFY_MODE_DUAL == sslFlag) {
-  //   printf("Get data with dual certification now...\n");
-  //   return tcpCommandClientSendCmdWithSecurity(client, cmd);
-  // }
-  // if(CERTIFY_MODE_ERROR == sslFlag) {
-  //   printf("No CA file found, please check CA file path!\n");
-  //   return PTC_ERROR_BAD_PARAMETER;
-  // }
   return PTC_ERROR_BAD_PARAMETER;
 }
 

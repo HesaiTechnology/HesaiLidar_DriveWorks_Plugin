@@ -26,7 +26,7 @@
 #ifndef UDP3_2_PARSER_H_
 #define UDP3_2_PARSER_H_
 
-// 角度修正文件的精度是0.001, 360 * 1000获得分度, 此时只能用int_32，单位/1000
+// Angle unit = 1/1000 360000/1000 = 360, the same as unit in correction file
 #define HS_LIDAR_QT128_AZIMUTH_SIZE (360000)
 #define HS_LIDAR_QT128_AZIMUTH_UNIT (1000)
 #define HS_LIDAR_QT128_LASER_NUM (128)
@@ -37,7 +37,7 @@
 #include "GeneralParser.h"
 #include "HsLidarQTV2.h"
 
-// QT128的校正文件，通道校正文件, 也没啥用，全123456就和默认值一样
+// Default channel config is the common use of QT128, using all 128 channels
 struct PandarQTChannelConfig {
  public:
   uint16_t m_u16Sob;
@@ -61,37 +61,23 @@ class Udp3_2_Parser : public GeneralParser {
                                    dwLidarPointXYZI* pointXYZI, dwLidarPointRTHI* pointRTHI) override;     
 
   /**
-   * @brief 获取每线对应的垂直方位角
+   * @brief Get vertical angle of each laser channel
    * 
-   * @param channel 0-127 QT128有128线
-   * @return int16_t 1.223度返回值为 1223，单位/1000
+   * @param channel 0-127 each laser channel, QT128 has 128
+   * @return int16_t 1.223 degree will return 1223，unit = 1/1000
    */
   int16_t GetVecticalAngle(int channel) override;
 
-  /**
-   * @brief 为了初始化m_vQT128Firetime
-   */
   virtual int LoadFiretimesString(const char *firetimes) override;
   virtual void LoadFiretimesFile(std::string firetimes_path) override;
   
   /**
-   * @brief 初始化m_PandarQTChannelConfig QT雷达特有
-   * 
-   * @param[in] channelconfig 实时雷达获取的字节流，或从文本中读取的 
-   * @return int 0成功 -1失败
+   * @brief Initialize the m_PandarQTChannelConfig, specialized for QT
    */
   virtual int LoadChannelConfigString(const char *channelconfig) override;
   virtual void LoadChannelConfigFile(std::string channel_config_path) override;
 
  private:
-  /**
-   * @brief 计算效率上 必须返回int类型
-   * 
-   * @param laserId 雷达线数 0-127
-   * @param speed 雷达转速
-   * @param loopIndex ？？从包尾获取，与回波模式两参数相关
-   * @return double 
-   */
   virtual double GetFiretimesCorrection(int laserId, double speed, int loopIndex);
 
   // To be initialized by func 'LoadFiretimesString'

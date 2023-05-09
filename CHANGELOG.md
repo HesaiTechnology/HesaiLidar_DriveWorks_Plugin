@@ -24,3 +24,14 @@ All notable changes to HESAI lidar plugin will be documented in this file.
 - Remove unneccessary parameters in the scripts
 
 ### Fixed
+
+## [1.2.1] - 2023-5-9
+ 
+### Changed
+- Support live sensor of Hesai Lidar QT128
+- Support virtual sensor of Hesai Lidar QT128
+- Support live sensor of Hesai Lidar Pandar128
+- Support virtual sensor of Hesai Lidar Pandar128
+- Add python file to simulate live sensor by sending pcap
+
+### Fixed

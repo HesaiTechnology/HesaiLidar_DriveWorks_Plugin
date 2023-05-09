@@ -20,10 +20,10 @@ filename = r'../data/pcap_sample_p128.pcap'
 # @note sending packets could be slow down while computing too large bunch of points, e.g. Pandar128
 # This phenomenent could be witnessed by PandarView & sample_lidar_replay
 while (True):
+    start_time  = time.time()
     with PcapReader(filename) as packets:
         for packet in packets:
             server.sendto(packet["Raw"].load[42:], ('<broadcast>', 2368))
             # ensure the point cloud display, 1ms
             # time.sleep(0.001)
-    print("-----Replay the pcap-----")
-
+    print("-----Done, playing the pcap, exec time = %s seconds-----" % (time.time() - start_time))

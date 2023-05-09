@@ -113,9 +113,6 @@ dwStatus HesaiLidar::resetSensor()
     m_buffer.clear();
     resetSlot();
 
-    // if (!isVirtualSensor())
-    //     m_inputSocket.CloseSocket();
-
     return DW_SUCCESS;
 }
 
@@ -161,7 +158,7 @@ dwStatus HesaiLidar::returnRawData(const uint8_t* data)
     if (!ok)
     {
         std::cerr << "returnRawData: LidarPlugin return raw data, invalid data pointer"
-                    << std::endl;
+                  << std::endl;
         return DW_INVALID_ARGUMENT;
     }
 

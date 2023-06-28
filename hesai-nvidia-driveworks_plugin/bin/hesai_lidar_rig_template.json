@@ -1,0 +1,47 @@
+{
+    "rig": {
+        "sensors": [
+            {
+                "name": "<SESSION_ID>",
+                "nominalSensor2Rig_FLU": {
+                    "roll-pitch-yaw": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "t": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ]
+                },
+                "parameter": "device=<SENSOR_TYPE>,log_level=<LOG_LEVEL>,ip=<SENSOR_ADDR>,udp_port=<UDP_PORT>,ptc_port=<PTC_PORT>,multcast_ip=<MULTCAST_IP>,host_ip=<HOST_ADDR>,decoder-path=<PLUGIN_PATH>,data_dir=<DATA_DIR>,correction_file=<CORRECTION_FILE>,lidar_type=<LIDAR_TYPE>",
+                "properties": null,
+                "protocol": "lidar.custom"
+            }
+        ],
+        "vehicle": {
+            "valid": true,
+            "value": {
+                "COMMENT": "steeringCoefficient is not validated",
+                "axlebaseFront": 1.582,
+                "axlebaseRear": 1.575,
+                "bumperFront": 0.912,
+                "bumperRear": 1.109,
+                "centerOfMassToRearAxle": 1.564,
+                "frontCorneringStiffness": 30654.0,
+                "height": 1.473,
+                "inertia": 1780.8,
+                "length": 4.872,
+                "mass": 1779.4,
+                "rearCorneringStiffness": 36407.0,
+                "steeringCoefficient": 14.8,
+                "wheelDiameter": 0.673,
+                "wheelbase": 2.85,
+                "width": 1.852,
+                "widthWithMirrors": 2.121
+            }
+        }
+    },
+    "version": 2
+}

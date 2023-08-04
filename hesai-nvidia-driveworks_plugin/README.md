@@ -1,7 +1,7 @@
 # HESAI Lidar Plugin Scripts for NVIDIA DRIVEWORKS 
 
 ## Overview
-Contained here is the HESAI Lidar AT128 Plugin for NVIDIA DRIVEWORKS 5.8. The plugin is 
+Contained here is the HESAI Lidar Plugin for NVIDIA DRIVEWORKS 5.8. Lidar AT128, QT128 and Pandar128 are supported. The plugin is 
 an implementation of NVIDIA's interface for Custom Lidars, described here: 
 - https://developer.nvidia.com/docs/drive/driveworks/latest/nvsdk_dw_html/sensorplugins_lidarsensor.html
 
@@ -31,10 +31,10 @@ Ensure you have DRIVEWORKS SDK installed and have tested by running
 
 ### Prepare the correction file for each HESAI AT128 lidar
 
-@note This is only essential when playing user-recorded sensor data, correction file was obtained automatically in Live Stream Sensor
+@note This is only essential for AT128 when playing user-recorded sensor data, correction file was obtained automatically in Live Stream Sensor.
 
 - `./share/correction_at128.dat` is the example correction file to play back the example recorded sensor data    `lidar_hesai_at128.bin`
-For each AT128 lidar, you can pass your correcion file path to `correction_file` in scripts. The correcion files for any AT128 are not the same!
+For each AT128 lidar, you can pass your correcion file path to `correction_file` in scripts. The correcion files for any AT128 are not the same! However, for QT128 and Pandar128, you can use the same correction file in share folder.
 
 The unique correction file of each Lidar AT128 was provided by your vendors, also acquired from the software HESAI PandarView2 
 For Download: https://www.hesaitech.com/en/Download
@@ -82,6 +82,8 @@ Example:
 
 ### Playback recorded sessions
 
+@note xxx.bin files contained in data folder has been removed due to the Github memory restriction, please contact us for those sample files and then you can run the following scripts. 
+
 To playback recorded sensor data, use the following command, with the recording's.bin, .bin.seek, and .cfg, files in the `/data` directory:
 - `./run_recording.sh <SESSION-ID> ` 
 Example:
@@ -117,6 +119,8 @@ These parameters are provided to the NVIDIA DRIVEWORKS sample apps in the `--par
 With `log_level` set to `WARN`, sufficient output to the console should happen to indicate if parameters are missing or incorrect.
 
 ## Simulate live sensor
+
+@note xxx.pcap files contained in data folder has been removed due to the Github memory restriction, please contact us for those sample files and then you can use them to simulate a live sensor. 
 
 For those who doesn't have a real hesai sensor, you can replay the pcap file to simulate the live sensor, and then use our scripts to play, record, and run recording.
 
